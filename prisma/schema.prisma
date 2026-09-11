@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  COMMERCIAL
+  LAND
+}
+
+enum TransactionType {
+  SALE
+  RENT
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String?
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([email])
+}
+
+model Property {
+  id              String          @id @default(uuid())
+  title           String
+  description     String          @db.Text
+  price           Decimal         @db.Decimal(12, 2)
+  type            PropertyType
+  transactionType TransactionType
+  bedrooms        Int
+  bathrooms       Int
+  area            Float
+  city            String
+  neighborhood    String
+  address         String
+  featured        Boolean         @default(false)
+  images          String[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([city])
+  @@index([type])
+  @@index([transactionType])
+  @@index([featured])
+}
