@@ -74,7 +74,7 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
   }
 
   return (
-    <form action={formAction} className="space-y-6 rounded-xl border bg-white p-6 shadow-sm">
+    <form action={formAction} className="space-y-6 rounded-xl border bg-background p-6 shadow-sm">
       <input
         type="hidden"
         name="imagesText"
@@ -156,7 +156,7 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
         <div className="md:col-span-2">
           <Label>Imagens do imóvel</Label>
           <div className="mt-2">
-            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-sm text-slate-600 hover:border-slate-400 hover:bg-slate-100">
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-background px-4 py-8 text-sm text-muted-foreground hover:border-primary hover:bg-secondary">
               <Upload className="h-5 w-5" />
               {uploading ? "Enviando..." : "Clique para selecionar imagens"}
               <input
@@ -173,7 +173,7 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
           {uploadedPaths.length > 0 && (
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
               {uploadedPaths.map((path, index) => (
-                <div key={`${path}-${index}`} className="group relative aspect-[4/3] overflow-hidden rounded-lg border bg-slate-100">
+                <div key={`${path}-${index}`} className="group relative aspect-[4/3] overflow-hidden rounded-lg border bg-secondary">
                   <Image src={path} alt={`Imagem ${index + 1}`} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
                   <button
                     type="button"
@@ -188,8 +188,8 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
           )}
         </div>
 
-        <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-          <input type="checkbox" className="h-4 w-4 rounded border-slate-300" {...form.register("featured")} />
+        <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <input type="checkbox" className="h-4 w-4 rounded border-border" {...form.register("featured")} />
           Imóvel em destaque
         </label>
       </div>

@@ -12,7 +12,7 @@ export function PropertyCard({ property }: { property: PropertyDTO }) {
   return (
     <Link href={`/imoveis/${property.id}`} className="group block h-full">
       <Card className="h-full overflow-hidden transition hover:-translate-y-1 hover:shadow-lg">
-        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+        <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
           <Image
             src={image}
             alt={property.title}
@@ -22,17 +22,17 @@ export function PropertyCard({ property }: { property: PropertyDTO }) {
             unoptimized={image.startsWith("/uploads/")}
           />
           <div className="absolute left-3 top-3 flex gap-2">
-            <Badge className="bg-white/90">{propertyTypeLabel(property.type)}</Badge>
-            <Badge className="bg-slate-950 text-white">{transactionTypeLabel(property.transactionType)}</Badge>
+            <Badge className="bg-background/90">{propertyTypeLabel(property.type)}</Badge>
+            <Badge className="bg-primary text-primary-foreground">{transactionTypeLabel(property.transactionType)}</Badge>
           </div>
         </div>
         <CardContent>
-          <p className="text-lg font-bold text-slate-950">{formatCurrency(property.price, property.transactionType)}</p>
-          <h3 className="mt-2 line-clamp-2 text-base font-semibold text-slate-900">{property.title}</h3>
-          <p className="mt-2 flex items-center gap-1 text-sm text-slate-600">
+          <p className="text-lg font-bold text-foreground">{formatCurrency(property.price, property.transactionType)}</p>
+          <h3 className="mt-2 line-clamp-2 text-base font-semibold text-foreground">{property.title}</h3>
+          <p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4" /> {property.city}, {property.neighborhood}
           </p>
-          <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-600">
+          <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1"><BedDouble className="h-4 w-4" /> {property.bedrooms}</span>
             <span className="flex items-center gap-1"><Bath className="h-4 w-4" /> {property.bathrooms}</span>
             <span className="flex items-center gap-1"><Ruler className="h-4 w-4" /> {property.area} m²</span>

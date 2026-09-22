@@ -4,7 +4,7 @@ import type { PropertyFilters } from "@/lib/properties";
 
 export function SearchForm({ filters = {}, compact = false }: { filters?: PropertyFilters; compact?: boolean }) {
   return (
-    <form action="/imoveis" className={compact ? "grid gap-3 md:grid-cols-6" : "grid gap-4 rounded-2xl bg-white p-4 shadow-xl md:grid-cols-5"}>
+    <form action="/imoveis" className={compact ? "grid gap-3 md:grid-cols-6" : "grid gap-4 rounded-2xl border bg-background p-4 shadow-xl md:grid-cols-5"}>
       <div>
         <Label htmlFor="type">Tipo</Label>
         <Select id="type" name="type" defaultValue={filters.type ?? ""}>

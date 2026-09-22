@@ -20,8 +20,8 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
     <main className="container-page py-10">
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <Badge>{propertyTypeLabel(property.type)}</Badge>
-        <Badge className="bg-slate-950 text-white">{transactionTypeLabel(property.transactionType)}</Badge>
-        {property.featured && <Badge className="bg-amber-100 text-amber-800">Destaque</Badge>}
+        <Badge className="bg-primary text-primary-foreground">{transactionTypeLabel(property.transactionType)}</Badge>
+        {property.featured && <Badge className="bg-primary text-primary-foreground">Destaque</Badge>}
       </div>
 
       <section>
@@ -30,9 +30,9 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
 
       <section className="mt-10 grid gap-10 lg:grid-cols-[1fr_380px]">
         <div>
-          <p className="text-3xl font-bold text-slate-950">{formatCurrency(property.price, property.transactionType)}</p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">{property.title}</h1>
-          <p className="mt-3 flex items-center gap-2 text-slate-600">
+          <p className="text-3xl font-bold text-foreground">{formatCurrency(property.price, property.transactionType)}</p>
+          <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground">{property.title}</h1>
+          <p className="mt-3 flex items-center gap-2 text-muted-foreground">
             <MapPin className="h-5 w-5" /> {property.address}, {property.neighborhood} - {property.city}
           </p>
 
@@ -44,20 +44,20 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
 
           <div className="mt-8">
             <h2 className="text-2xl font-bold">Descrição</h2>
-            <p className="mt-3 whitespace-pre-line leading-7 text-slate-700">{property.description}</p>
+            <p className="mt-3 whitespace-pre-line leading-7 text-muted-foreground">{property.description}</p>
           </div>
 
           <div className="mt-8">
             <h2 className="text-2xl font-bold">Localização</h2>
-            <div className="mt-3 rounded-xl border bg-slate-50 p-6 text-slate-700">
+            <div className="mt-3 rounded-xl border bg-background p-6 text-muted-foreground">
               {property.address}, {property.neighborhood}, {property.city}
             </div>
           </div>
         </div>
 
-        <aside className="h-fit rounded-2xl border bg-white p-6 shadow-sm">
+        <aside className="h-fit rounded-2xl border bg-background p-6 shadow-sm">
           <h2 className="text-xl font-bold">Tenho interesse</h2>
-          <p className="mt-1 text-sm text-slate-600">Preencha seus dados e nossa equipe entrará em contato.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Preencha seus dados e nossa equipe entrará em contato.</p>
           <form className="mt-5 space-y-4">
             <div><Label htmlFor="name">Nome</Label><Input id="name" name="name" required /></div>
             <div><Label htmlFor="email">E-mail</Label><Input id="email" name="email" type="email" required /></div>

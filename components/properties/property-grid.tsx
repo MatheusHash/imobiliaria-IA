@@ -4,7 +4,7 @@ import { PropertyCard } from "./property-card";
 export function PropertyGrid({ properties }: { properties: PropertyDTO[] }) {
   if (properties.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed p-10 text-center text-slate-600">
+      <div className="rounded-xl border border-dashed p-10 text-center text-muted-foreground">
         Nenhum imóvel encontrado com os filtros selecionados.
       </div>
     );

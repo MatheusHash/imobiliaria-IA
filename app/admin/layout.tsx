@@ -8,11 +8,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <>
-      <div className="border-b bg-slate-50">
+      <div className="border-b bg-background">
         <div className="container-page flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-slate-900">Área administrativa</p>
-            <p className="text-sm text-slate-600">Autenticado como {user.name ?? user.email}</p>
+            <p className="text-sm font-semibold text-foreground">Área administrativa</p>
+            <p className="text-sm text-muted-foreground">Autenticado como {user.name ?? user.email}</p>
           </div>
           <form action={logoutAction}>
             <Button type="submit" variant="outline" className="gap-2">

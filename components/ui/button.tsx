@@ -2,10 +2,10 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const variants = {
-  default: "bg-slate-950 text-white hover:bg-slate-800",
-  outline: "border border-slate-300 bg-white text-slate-900 hover:bg-slate-50",
+  default: "bg-primary text-primary-foreground hover:bg-primary/90",
+  outline: "border border-border bg-background text-foreground hover:bg-secondary",
   destructive: "bg-red-600 text-white hover:bg-red-700",
-  ghost: "text-slate-700 hover:bg-slate-100"
+  ghost: "text-foreground hover:bg-secondary"
 };
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {

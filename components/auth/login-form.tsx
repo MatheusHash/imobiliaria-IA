@@ -11,7 +11,7 @@ export function LoginForm({ next }: { next: string }) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
 
   return (
-    <form action={formAction} className="space-y-4 rounded-xl border bg-white p-6 shadow-sm">
+    <form action={formAction} className="space-y-4 rounded-xl border bg-background p-6 shadow-sm">
       <input type="hidden" name="next" value={next} />
 
       {state.message && (
