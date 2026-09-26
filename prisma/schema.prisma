@@ -20,12 +20,13 @@ enum TransactionType {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  name         String?
-  email        String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(uuid())
+  name          String?
+  email         String   @unique
+  passwordHash  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  assignedLeads Lead[]
 
   @@index([email])
 }
@@ -49,9 +50,38 @@ model Property {
   images          String[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+  leads           Lead[]
 
   @@index([city])
   @@index([type])
   @@index([transactionType])
   @@index([featured])
+}
+
+enum LeadStatus {
+  NEW
+  IN_PROGRESS
+  CONVERTED
+  LOST
+}
+
+/// Contato de um cliente interessado em um imóvel.
+model Lead {
+  id           String     @id @default(uuid())
+  /// Opcional para o lead não se perder se o imóvel for excluído.
+  propertyId   String?
+  property     Property?  @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  name         String
+  email        String
+  phone        String
+  message      String?    @db.Text
+  status       LeadStatus @default(NEW)
+  assignedToId String?
+  assignedTo   User?      @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([status])
+  @@index([propertyId])
+  @@index([assignedToId])
 }

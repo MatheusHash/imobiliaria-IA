@@ -2,8 +2,7 @@ export const dynamic = "force-dynamic";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Bath, BedDouble, MapPin, Ruler } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input, Label, Textarea } from "@/components/ui/field";
+import { InterestForm } from "@/components/leads/interest-form";
 import { PropertyGallery } from "@/components/properties/property-gallery";
 import { getPropertyByCodeOrId, parsePropertyCode } from "@/lib/properties";
 import { formatCurrency, propertyTypeLabel, transactionTypeLabel } from "@/lib/utils";
@@ -61,13 +60,7 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
         <aside className="h-fit rounded-2xl border bg-background p-6 shadow-sm">
           <h2 className="text-xl font-bold">Tenho interesse</h2>
           <p className="mt-1 text-sm text-muted-foreground">Preencha seus dados e nossa equipe entrará em contato.</p>
-          <form className="mt-5 space-y-4">
-            <div><Label htmlFor="name">Nome</Label><Input id="name" name="name" required /></div>
-            <div><Label htmlFor="email">E-mail</Label><Input id="email" name="email" type="email" required /></div>
-            <div><Label htmlFor="phone">Telefone</Label><Input id="phone" name="phone" required /></div>
-            <div><Label htmlFor="message">Mensagem</Label><Textarea id="message" name="message" defaultValue={`Tenho interesse no imóvel ${property.code}: ${property.title}`} /></div>
-            <Button type="submit" className="w-full">Enviar interesse</Button>
-          </form>
+          <InterestForm propertyId={property.id} defaultMessage={`Tenho interesse no imóvel ${property.code}: ${property.title}`} />
         </aside>
       </section>
     </main>
