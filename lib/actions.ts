@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createSession, destroySession, requireCurrentUser, verifyPassword } from "./auth";
 import { createLead, isLeadStatus, leadSchema } from "./leads";
 import { prisma } from "./prisma";
-import { checkRateLimit, getClientIp } from "./rate-limit";
+import { checkRateLimit, getClientIp, resetRateLimit } from "./rate-limit";
 import { parseImagesText, propertySchema } from "./validations";
 
 export type ActionState = {
@@ -122,14 +122,52 @@ export async function createLeadAction(_prevState: ActionState, formData: FormDa
   return { success: true, message: "Recebemos seu contato! Em breve nossa equipe falará com você." };
 }
 
+/** Corretores só mexem em leads sem responsável ou atribuídos a eles; admins, em todos. */
+async function findEditableLead(id: string, user: { id: string; role: string }) {
+  const lead = await prisma.lead.findUnique({ where: { id }, select: { id: true, assignedToId: true } });
+  if (!lead) return null;
+  if (user.role === "ADMIN" || !lead.assignedToId || lead.assignedToId === user.id) return lead;
+  return null;
+}
+
 export async function updateLeadStatusAction(id: string, formData: FormData) {
-  await requireCurrentUser("/admin/leads");
+  const user = await requireCurrentUser("/admin/leads");
 
   const status = String(formData.get("status") ?? "");
   if (!isLeadStatus(status)) return;
 
-  await prisma.lead.update({ where: { id }, data: { status } });
-  revalidatePath("/admin/leads");
+  const lead = await findEditableLead(id, user);
+  if (!lead) return;
+
+  // O corretor que atende um lead sem responsável passa a ser o responsável.
+  const assignedToId = lead.assignedToId ?? (user.role === "CORRETOR" ? user.id : null);
+
+  await prisma.lead.update({ where: { id }, data: { status, assignedToId } });
+  revalidatePath("/admin", "layout");
+}
+
+export async function assignLeadAction(id: string, formData: FormData) {
+  const user = await requireCurrentUser("/admin/leads");
+
+  const lead = await findEditableLead(id, user);
+  if (!lead) return;
+
+  const requested = String(formData.get("assignedToId") ?? "");
+  let assignedToId: string | null;
+
+  if (user.role === "ADMIN") {
+    // Admin atribui a qualquer usuário ativo, ou deixa sem responsável.
+    const target = requested ? await prisma.user.findFirst({ where: { id: requested, active: true }, select: { id: true } }) : null;
+    if (requested && !target) return;
+    assignedToId = target?.id ?? null;
+  } else {
+    // Corretor só pode assumir o lead para si.
+    if (requested !== user.id) return;
+    assignedToId = user.id;
+  }
+
+  await prisma.lead.update({ where: { id }, data: { assignedToId } });
+  revalidatePath("/admin", "layout");
 }
 
 function getSafeRedirectPath(value: FormDataEntryValue | null) {
@@ -150,13 +188,25 @@ export async function loginAction(_prevState: ActionState, formData: FormData): 
     return { success: false, message: "Informe e-mail e senha." };
   }
 
+  const rateLimitKey = `login:${email}:${await getClientIp()}`;
+  if (!checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000).allowed) {
+    return { success: false, message: "Muitas tentativas de login. Aguarde 15 minutos e tente novamente." };
+  }
+
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return { success: false, message: "E-mail ou senha inválidos." };
   }
 
+  if (!user.active) {
+    return { success: false, message: "Este usuário está desativado. Fale com um administrador." };
+  }
+
+  resetRateLimit(rateLimitKey);
   await createSession({ id: user.id, email: user.email });
+
+  if (user.mustChangePassword) redirect("/conta?primeiro-acesso=1");
   redirect(getSafeRedirectPath(formData.get("next")));
 }
 

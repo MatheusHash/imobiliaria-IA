@@ -91,7 +91,8 @@ async function main() {
     data: {
       name: "Administrador",
       email: "admin@primelar.com",
-      passwordHash: hashPassword("admin123")
+      passwordHash: hashPassword("admin123"),
+      role: "ADMIN"
     }
   });
 

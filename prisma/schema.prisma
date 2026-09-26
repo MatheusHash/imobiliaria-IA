@@ -19,14 +19,26 @@ enum TransactionType {
   RENT
 }
 
+enum Role {
+  ADMIN
+  CORRETOR
+}
+
 model User {
-  id            String   @id @default(uuid())
-  name          String?
-  email         String   @unique
-  passwordHash  String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  assignedLeads Lead[]
+  id                 String   @id @default(uuid())
+  name               String?
+  email              String   @unique
+  passwordHash       String
+  role               Role     @default(CORRETOR)
+  /// Usuários desativados não conseguem entrar; imóveis e leads continuam vinculados.
+  active             Boolean  @default(true)
+  /// WhatsApp do usuário.
+  phone              String?
+  /// Obriga a troca da senha provisória no próximo acesso.
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  assignedLeads      Lead[]
 
   @@index([email])
 }

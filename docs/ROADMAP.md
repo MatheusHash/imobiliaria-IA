@@ -79,7 +79,8 @@ model Lead {
 
 - [x] Formulário da página do imóvel salva o lead via server action (mesmo padrão do cadastro de imóveis)
 - [x] Mensagem de sucesso/erro para o cliente
-- [x] Tela `/admin/leads` com filtro por status e por imóvel
+- [x] Tela `/admin/leads` com filtro por status
+- [ ] Filtro de leads por imóvel
 - [x] Botão "Responder no WhatsApp" (`https://wa.me/55...`) em cada lead
 - [x] Anti-spam: campo honeypot + limite de envios por IP
 
@@ -104,12 +105,12 @@ model User {
 
 **Tarefas**
 
-- [ ] `/admin/usuarios`: listar, criar, editar e **desativar** (não excluir — imóveis e leads continuam vinculados)
-- [ ] Admin define senha provisória; usuário troca no primeiro acesso (`mustChangePassword`)
-- [ ] Tela "Minha conta" para trocar a própria senha
-- [ ] Guardas de permissão por papel nas páginas, server actions e rotas de API
-- [ ] **Correção de segurança:** `isRequestAuthenticated` (rotas `/api/admin/*`) só valida a assinatura do cookie. Precisa consultar o banco e verificar se o usuário existe e está `active` — senão um usuário desativado mantém acesso por até 7 dias
-- [ ] Limite de tentativas de login (ex.: 5 tentativas / 15 min por e-mail + IP)
+- [x] `/admin/usuarios`: listar, criar, editar e **desativar** (não excluir — imóveis e leads continuam vinculados)
+- [x] Admin define senha provisória; usuário troca no primeiro acesso (`mustChangePassword`)
+- [x] Tela "Minha conta" para trocar a própria senha
+- [x] Guardas de permissão por papel nas páginas, server actions e rotas de API
+- [x] **Correção de segurança:** `isRequestAuthenticated` (rotas `/api/admin/*`) só valida a assinatura do cookie. Precisa consultar o banco e verificar se o usuário existe e está `active` — senão um usuário desativado mantém acesso por até 7 dias
+- [x] Limite de tentativas de login (ex.: 5 tentativas / 15 min por e-mail + IP)
 
 **Trade-off — senha provisória × convite por e-mail**
 

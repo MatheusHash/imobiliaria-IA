@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
-import { isRequestAuthenticated } from "@/lib/auth";
+import { getRequestUser } from "@/lib/auth";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
@@ -15,7 +15,7 @@ const EXTENSIONS_BY_MIME: Record<string, string> = {
 };
 
 export async function POST(request: Request) {
-  if (!isRequestAuthenticated(request)) {
+  if (!(await getRequestUser(request))) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 

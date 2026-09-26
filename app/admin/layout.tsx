@@ -3,11 +3,12 @@ import { AdminNav } from "@/components/admin/admin-nav";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/lib/actions";
 import { requireCurrentUser } from "@/lib/auth";
+import { leadScope } from "@/lib/leads";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireCurrentUser();
-  const newLeads = await prisma.lead.count({ where: { status: "NEW" } });
+  const newLeads = await prisma.lead.count({ where: { status: "NEW", ...leadScope(user) } });
 
   return (
     <>
@@ -21,7 +22,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <AdminNav
               items={[
                 { href: "/admin/imoveis", label: "Imóveis" },
-                { href: "/admin/leads", label: "Leads", badge: newLeads }
+                { href: "/admin/leads", label: "Leads", badge: newLeads },
+                ...(user.role === "ADMIN" ? [{ href: "/admin/usuarios", label: "Usuários" }] : []),
+                { href: "/conta", label: "Minha conta" }
               ]}
             />
           </div>

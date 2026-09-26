@@ -1,4 +1,4 @@
-import { LeadStatus } from "@prisma/client";
+import { LeadStatus, Prisma, Role } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "./prisma";
 
@@ -26,6 +26,11 @@ export const leadStatuses = Object.keys(leadStatusLabels) as LeadStatus[];
 
 export function isLeadStatus(value?: string | null): value is LeadStatus {
   return !!value && value in leadStatusLabels;
+}
+
+/** Leads visíveis para o usuário: admin vê todos; corretor vê os sem responsável e os seus. */
+export function leadScope(user: { id: string; role: Role }): Prisma.LeadWhereInput {
+  return user.role === "ADMIN" ? {} : { OR: [{ assignedToId: null }, { assignedToId: user.id }] };
 }
 
 export async function createLead(data: LeadInput) {

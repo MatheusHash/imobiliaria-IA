@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { isRequestAuthenticated } from "@/lib/auth";
+import { getRequestUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { propertySchema } from "@/lib/validations";
 
 export async function POST(request: Request) {
-  if (!isRequestAuthenticated(request)) {
+  if (!(await getRequestUser(request))) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
