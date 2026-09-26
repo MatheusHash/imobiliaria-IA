@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Input, Label, Select } from "@/components/ui/field";
 import type { PropertyFilters } from "@/lib/properties";
 
@@ -29,12 +30,12 @@ export function SearchForm({ filters = {}, compact = false }: { filters?: Proper
       </div>
       <div>
         <Label htmlFor="minPrice">Preço mín.</Label>
-        <Input id="minPrice" name="minPrice" type="number" min="0" placeholder="R$" defaultValue={filters.minPrice ?? ""} />
+        <CurrencyInput id="minPrice" name="minPrice" defaultValue={filters.minPrice} />
       </div>
       <div>
         <Label htmlFor="maxPrice">Preço máx.</Label>
         <div className="flex gap-2">
-          <Input id="maxPrice" name="maxPrice" type="number" min="0" placeholder="R$" defaultValue={filters.maxPrice ?? ""} />
+          <CurrencyInput id="maxPrice" name="maxPrice" defaultValue={filters.maxPrice} />
           <Button type="submit">Buscar</Button>
         </div>
       </div>

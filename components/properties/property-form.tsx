@@ -9,6 +9,7 @@ import type { PropertyDTO } from "@/lib/properties";
 import { createPropertyAction, updatePropertyAction, type ActionState } from "@/lib/actions";
 import { propertyFormSchema, type PropertyFormInput } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/field";
 
 const initialState: ActionState = {};
@@ -106,7 +107,7 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
         </div>
         <div>
           <Label htmlFor="price">Preço</Label>
-          <Input id="price" type="number" step="0.01" {...form.register("price")} />
+          <CurrencyInput id="price" name="price" defaultValue={property?.price} />
           <FieldError message={form.formState.errors.price?.message ?? serverError("price")} />
         </div>
         <div>
