@@ -2,10 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { getCurrentUser } from "@/lib/auth";
+import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Prime Lar Imobiliária",
-  description: "Sistema web para imobiliária com catálogo público e administração de imóveis."
+  metadataBase: new URL(siteConfig.url),
+  title: { default: siteConfig.name, template: `%s | ${siteConfig.name}` },
+  description: siteConfig.description,
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: siteConfig.name,
+    title: siteConfig.name,
+    description: siteConfig.description
+  }
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

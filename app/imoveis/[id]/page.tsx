@@ -1,17 +1,47 @@
 export const dynamic = "force-dynamic";
+import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import { Bath, BedDouble, Car, Check, Info, MapPin, Ruler } from "lucide-react";
+import { Bath, BedDouble, Car, Check, Info, MapPin, MessageCircle, Ruler } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { InterestForm } from "@/components/leads/interest-form";
 import { PropertyGallery } from "@/components/properties/property-gallery";
 import { PropertyGrid } from "@/components/properties/property-grid";
 import { amenityLabels, isAmenity } from "@/lib/amenities";
 import { getCurrentUser } from "@/lib/auth";
+import { whatsappLink } from "@/lib/leads";
 import { getPropertyByCodeOrId, getSimilarProperties, parsePropertyCode } from "@/lib/properties";
 import { ACCEPTS_LEADS_STATUSES, PUBLIC_PAGE_STATUSES, propertyStatusLabels } from "@/lib/property-status";
+import { siteConfig } from "@/lib/site";
 import { formatCurrency, propertyTypeLabel, transactionTypeLabel } from "@/lib/utils";
 
 type PageProps = { params: Promise<{ id: string }> };
+
+// Título, descrição e foto usados no preview do link (WhatsApp, Facebook, Google).
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const property = await getPropertyByCodeOrId(id);
+  if (!property || !PUBLIC_PAGE_STATUSES.includes(property.status)) return { title: "Imóvel não encontrado" };
+
+  const title = `${property.title} — ${formatCurrency(property.price, property.transactionType)}`;
+  const details = [
+    `${propertyTypeLabel(property.type)} para ${property.transactionType === "RENT" ? "alugar" : "comprar"}`,
+    `${property.neighborhood}, ${property.city}`,
+    property.bedrooms > 0 && `${property.bedrooms} quarto${property.bedrooms > 1 ? "s" : ""}`,
+    `${property.area} m²`,
+    `Código ${property.code}`
+  ].filter(Boolean);
+  const description = details.join(" · ");
+  const url = `/imoveis/${property.code}`;
+  const image = property.images[0];
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, images: image ? [{ url: image, alt: property.title }] : undefined },
+    twitter: { card: image ? "summary_large_image" : "summary", title, description }
+  };
+}
 
 const statusNotices = {
   RESERVED: "Este imóvel está reservado. Deixe seu contato para ser avisado caso a negociação não se concretize.",
@@ -112,6 +142,22 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
           {acceptsLeads ? (
             <>
               <h2 className="text-xl font-bold">Tenho interesse</h2>
+              {siteConfig.whatsappNumber && (
+                <>
+                  <a
+                    href={whatsappLink(
+                      siteConfig.whatsappNumber,
+                      `Olá! Tenho interesse no imóvel ${property.code} (${property.title}): ${siteConfig.url}/imoveis/${property.code}`
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700"
+                  >
+                    <MessageCircle className="h-5 w-5" /> Falar no WhatsApp
+                  </a>
+                  <p className="mt-4 text-center text-xs uppercase tracking-wide text-muted-foreground">ou deixe seus dados</p>
+                </>
+              )}
               <p className="mt-1 text-sm text-muted-foreground">Preencha seus dados e nossa equipe entrará em contato.</p>
               <InterestForm propertyId={property.id} defaultMessage={`Tenho interesse no imóvel ${property.code}: ${property.title}`} />
             </>
