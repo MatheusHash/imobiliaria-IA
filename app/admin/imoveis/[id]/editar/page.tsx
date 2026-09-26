@@ -17,7 +17,7 @@ export default async function EditPropertyPage({ params }: PageProps) {
       <div className="mb-8">
         <p className="text-sm font-semibold uppercase tracking-wide text-primary">Administração</p>
         <h1 className="text-3xl font-bold text-foreground">Editar imóvel</h1>
-        <p className="mt-2 text-muted-foreground">Atualize as informações do imóvel selecionado.</p>
+        <p className="mt-2 text-muted-foreground">Atualize as informações do imóvel <strong className="text-foreground">código {property.code}</strong>.</p>
       </div>
       <PropertyForm property={property} />
     </main>

@@ -24,6 +24,7 @@ Site de imobiliária: vitrine pública de imóveis + painel administrativo para 
 - `lib/properties.ts` — consultas de imóveis; `lib/actions.ts` — server actions.
 - `components/properties/` — cards, grid, galeria, formulário, busca.
 - `prisma/schema.prisma` — modelos `User` e `Property` (imagens são `String[]` de URLs/caminhos).
+- Imóveis têm dois identificadores: `id` (UUID interno, usado no admin e nas APIs de escrita) e `code` (inteiro sequencial a partir de 1001, exibido ao cliente). URLs públicas usam o código: `/imoveis/1001`; links com UUID redirecionam.
 - Uploads de imagens são gravados em `public/uploads/<propertyId|_temp>/`.
 
 ## Convenções

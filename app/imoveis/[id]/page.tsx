@@ -1,20 +1,22 @@
 export const dynamic = "force-dynamic";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Bath, BedDouble, MapPin, Ruler } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/field";
 import { PropertyGallery } from "@/components/properties/property-gallery";
-import { getPropertyById } from "@/lib/properties";
+import { getPropertyByCodeOrId, parsePropertyCode } from "@/lib/properties";
 import { formatCurrency, propertyTypeLabel, transactionTypeLabel } from "@/lib/utils";
 
 type PageProps = { params: Promise<{ id: string }> };
 
 export default async function PropertyDetailsPage({ params }: PageProps) {
   const { id } = await params;
-  const property = await getPropertyById(id);
+  const property = await getPropertyByCodeOrId(id);
 
   if (!property) notFound();
+  // Links antigos usavam o UUID; o endereço público oficial é o código.
+  if (parsePropertyCode(id) === null) permanentRedirect(`/imoveis/${property.code}`);
 
   return (
     <main className="container-page py-10">
@@ -22,6 +24,7 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
         <Badge>{propertyTypeLabel(property.type)}</Badge>
         <Badge className="bg-primary text-primary-foreground">{transactionTypeLabel(property.transactionType)}</Badge>
         {property.featured && <Badge className="bg-primary text-primary-foreground">Destaque</Badge>}
+        <span className="ml-auto text-sm font-medium text-muted-foreground">Código do imóvel: <strong className="text-foreground">{property.code}</strong></span>
       </div>
 
       <section>
@@ -62,7 +65,7 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
             <div><Label htmlFor="name">Nome</Label><Input id="name" name="name" required /></div>
             <div><Label htmlFor="email">E-mail</Label><Input id="email" name="email" type="email" required /></div>
             <div><Label htmlFor="phone">Telefone</Label><Input id="phone" name="phone" required /></div>
-            <div><Label htmlFor="message">Mensagem</Label><Textarea id="message" name="message" defaultValue={`Tenho interesse no imóvel: ${property.title}`} /></div>
+            <div><Label htmlFor="message">Mensagem</Label><Textarea id="message" name="message" defaultValue={`Tenho interesse no imóvel ${property.code}: ${property.title}`} /></div>
             <Button type="submit" className="w-full">Enviar interesse</Button>
           </form>
         </aside>

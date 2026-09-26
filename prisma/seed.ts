@@ -84,6 +84,8 @@ const properties = [
 async function main() {
   await prisma.property.deleteMany();
   await prisma.user.deleteMany();
+  // Reinicia a numeração dos códigos para que o primeiro imóvel seja o 1001.
+  await prisma.$executeRaw`SELECT setval(pg_get_serial_sequence('"Property"', 'code'), 1000)`;
 
   await prisma.user.create({
     data: {

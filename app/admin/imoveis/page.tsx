@@ -25,7 +25,7 @@ export default async function AdminPropertiesPage({ searchParams }: PageProps) {
       </div>
 
       <form className="mb-6 grid gap-3 rounded-xl border bg-background p-4 md:grid-cols-5">
-        <div className="md:col-span-2"><Label htmlFor="q">Buscar por título</Label><Input id="q" name="q" defaultValue={filters.q ?? ""} placeholder="Título do imóvel" /></div>
+        <div className="md:col-span-2"><Label htmlFor="q">Buscar por título ou código</Label><Input id="q" name="q" defaultValue={filters.q ?? ""} placeholder="Ex.: Casa com jardim ou 1001" /></div>
         <div><Label htmlFor="type">Tipo</Label><Select id="type" name="type" defaultValue={filters.type ?? ""}><option value="">Todos</option><option value="APARTMENT">Apartamento</option><option value="HOUSE">Casa</option><option value="COMMERCIAL">Comercial</option><option value="LAND">Terreno</option></Select></div>
         <div><Label htmlFor="transactionType">Transação</Label><Select id="transactionType" name="transactionType" defaultValue={filters.transactionType ?? ""}><option value="">Todas</option><option value="SALE">Venda</option><option value="RENT">Aluguel</option></Select></div>
         <button className="mt-6 h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">Filtrar</button>
@@ -36,6 +36,7 @@ export default async function AdminPropertiesPage({ searchParams }: PageProps) {
           <table className="min-w-full divide-y divide-border text-sm">
             <thead className="bg-background text-left text-xs font-semibold uppercase tracking-wide text-primary">
               <tr>
+                <th className="px-4 py-3">Código</th>
                 <th className="px-4 py-3">Título</th>
                 <th className="px-4 py-3">Tipo</th>
                 <th className="px-4 py-3">Transação</th>
@@ -48,6 +49,7 @@ export default async function AdminPropertiesPage({ searchParams }: PageProps) {
             <tbody className="divide-y divide-border">
               {properties.map((property) => (
                 <tr key={property.id} className="hover:bg-secondary">
+                  <td className="px-4 py-3 font-mono text-foreground">{property.code}</td>
                   <td className="px-4 py-3 font-medium text-foreground">{property.title}</td>
                   <td className="px-4 py-3">{propertyTypeLabel(property.type)}</td>
                   <td className="px-4 py-3">{transactionTypeLabel(property.transactionType)}</td>
@@ -56,7 +58,7 @@ export default async function AdminPropertiesPage({ searchParams }: PageProps) {
                   <td className="px-4 py-3">{property.featured ? "Sim" : "Não"}</td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-2">
-                      <Link className="inline-flex h-8 items-center rounded-md border px-3 hover:bg-secondary" href={`/imoveis/${property.id}`}><Eye className="mr-1 h-4 w-4" />Ver</Link>
+                      <Link className="inline-flex h-8 items-center rounded-md border px-3 hover:bg-secondary" href={`/imoveis/${property.code}`}><Eye className="mr-1 h-4 w-4" />Ver</Link>
                       <Link className="inline-flex h-8 items-center rounded-md border px-3 hover:bg-secondary" href={`/admin/imoveis/${property.id}/editar`}><Pencil className="mr-1 h-4 w-4" />Editar</Link>
                       <DeletePropertyButton id={property.id} />
                     </div>
@@ -64,7 +66,7 @@ export default async function AdminPropertiesPage({ searchParams }: PageProps) {
                 </tr>
               ))}
               {properties.length === 0 && (
-                <tr><td className="px-4 py-8 text-center text-primary" colSpan={7}>Nenhum imóvel cadastrado.</td></tr>
+                <tr><td className="px-4 py-8 text-center text-primary" colSpan={8}>Nenhum imóvel cadastrado.</td></tr>
               )}
             </tbody>
           </table>
