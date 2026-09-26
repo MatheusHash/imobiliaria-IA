@@ -15,6 +15,15 @@ export function formatCurrency(value: number, transactionType?: string) {
   return transactionType === "RENT" ? `${formatted}/mês` : formatted;
 }
 
+export function formatBRL(value: number, fractionDigits: 0 | 2 = 2) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits
+  }).format(value);
+}
+
 export function propertyTypeLabel(type: string) {
   const labels: Record<string, string> = {
     APARTMENT: "Apartamento",
