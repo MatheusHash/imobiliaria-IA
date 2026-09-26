@@ -140,14 +140,14 @@ model User {
 
 ### Site público
 
-- [ ] **Preview no WhatsApp/redes sociais:** `generateMetadata` + Open Graph por imóvel (título, preço, foto). Hoje todas as páginas têm o mesmo título genérico
-- [ ] **Botão "Falar no WhatsApp"** com mensagem pronta: *"Olá, tenho interesse no imóvel 1001"*
-- [ ] **Filtros adicionais:** quartos, vagas, bairro
-- [ ] **Ordenação:** menor preço, maior preço, mais recentes
-- [ ] **Paginação** — hoje a listagem carrega todos os imóveis de uma vez
+- [x] **Preview no WhatsApp/redes sociais:** `generateMetadata` + Open Graph por imóvel (título, preço, foto). Hoje todas as páginas têm o mesmo título genérico
+- [x] **Botão "Falar no WhatsApp"** com mensagem pronta: *"Olá, tenho interesse no imóvel 1001"*
+- [x] **Filtros adicionais:** quartos, vagas, bairro
+- [x] **Ordenação:** menor preço, maior preço, mais recentes
+- [x] **Paginação** — hoje a listagem carrega todos os imóveis de uma vez
 - [ ] **Mapa** na página do imóvel a partir do endereço
 - [ ] Páginas institucionais: Sobre, Contato, **Anuncie seu imóvel** (captação de proprietários)
-- [ ] `sitemap.xml` e `robots.txt` para SEO
+- [x] `sitemap.xml` e `robots.txt` para SEO
 
 ### Admin
 

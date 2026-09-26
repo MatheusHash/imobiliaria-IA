@@ -8,10 +8,37 @@ export type PropertyFilters = {
   type?: string;
   transactionType?: string;
   city?: string;
+  neighborhood?: string;
   minPrice?: string;
   maxPrice?: string;
+  /** Mínimo de quartos ("2" = 2 ou mais). */
+  bedrooms?: string;
+  /** Mínimo de vagas de garagem. */
+  parking?: string;
   q?: string;
+  sort?: string;
+  page?: string;
 };
+
+export const PAGE_SIZE = 12;
+
+export const sortOptions = {
+  recent: { label: "Mais recentes", orderBy: { createdAt: "desc" } },
+  "price-asc": { label: "Menor preço", orderBy: { price: "asc" } },
+  "price-desc": { label: "Maior preço", orderBy: { price: "desc" } }
+} satisfies Record<string, { label: string; orderBy: Prisma.PropertyOrderByWithRelationInput }>;
+
+export type SortKey = keyof typeof sortOptions;
+
+export function parseSort(value?: string): SortKey {
+  return value && value in sortOptions ? (value as SortKey) : "recent";
+}
+
+/** Inteiro >= 0 a partir de um parâmetro da URL, ou undefined. */
+function parseMin(value?: string) {
+  if (!value || !/^\d{1,3}$/.test(value)) return undefined;
+  return Number(value);
+}
 
 export type PropertyDTO = {
   id: string;
@@ -81,6 +108,12 @@ export function buildPropertyWhere(filters: PropertyFilters = {}, audience: Audi
   if (includeType(filters.type)) where.type = filters.type;
   if (includeTransactionType(filters.transactionType)) where.transactionType = filters.transactionType;
   if (filters.city) where.city = { contains: filters.city, mode: "insensitive" };
+  if (filters.neighborhood) where.neighborhood = { contains: filters.neighborhood, mode: "insensitive" };
+
+  const bedrooms = parseMin(filters.bedrooms);
+  if (bedrooms) where.bedrooms = { gte: bedrooms };
+  const parking = parseMin(filters.parking);
+  if (parking) where.parkingSpaces = { gte: parking };
   if (filters.q) {
     const qCode = parsePropertyCode(filters.q);
     where.OR = [
@@ -110,6 +143,23 @@ export async function getProperties(filters: PropertyFilters = {}, audience: Aud
     orderBy: { createdAt: "desc" }
   });
   return properties.map((property) => toDTO(property));
+}
+
+/** Página de resultados do site público, com ordenação e total para a paginação. */
+export async function getPropertiesPage(filters: PropertyFilters = {}) {
+  const where = buildPropertyWhere(filters, "public");
+  const total = await prisma.property.count({ where });
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.min(Math.max(1, parseMin(filters.page) ?? 1), pageCount);
+
+  const properties = await prisma.property.findMany({
+    where,
+    orderBy: [sortOptions[parseSort(filters.sort)].orderBy, { code: "desc" }],
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE
+  });
+
+  return { properties: properties.map((property) => toDTO(property)), total, page, pageCount };
 }
 
 export async function getFeaturedProperties() {
