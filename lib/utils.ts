@@ -32,3 +32,12 @@ export function transactionTypeLabel(type: string) {
   };
   return labels[type] ?? type;
 }
+
+/** Máscara de telefone brasileiro: (35) 3333-4444 ou (35) 99999-8888. */
+export function maskPhone(text: string) {
+  const digits = text.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 2) return digits ? `(${digits}` : "";
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}

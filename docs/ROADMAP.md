@@ -77,11 +77,11 @@ model Lead {
 
 **Tarefas**
 
-- [ ] Formulário da página do imóvel salva o lead via server action (mesmo padrão do cadastro de imóveis)
-- [ ] Mensagem de sucesso/erro para o cliente
-- [ ] Tela `/admin/leads` com filtro por status e por imóvel
-- [ ] Botão "Responder no WhatsApp" (`https://wa.me/55...`) em cada lead
-- [ ] Anti-spam: campo honeypot + limite de envios por IP
+- [x] Formulário da página do imóvel salva o lead via server action (mesmo padrão do cadastro de imóveis)
+- [x] Mensagem de sucesso/erro para o cliente
+- [x] Tela `/admin/leads` com filtro por status e por imóvel
+- [x] Botão "Responder no WhatsApp" (`https://wa.me/55...`) em cada lead
+- [x] Anti-spam: campo honeypot + limite de envios por IP
 
 ### 2. Usuários e papéis
 

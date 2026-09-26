@@ -3,13 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSession, destroySession, requireCurrentUser, verifyPassword } from "./auth";
+import { createLead, isLeadStatus, leadSchema } from "./leads";
 import { prisma } from "./prisma";
+import { checkRateLimit, getClientIp } from "./rate-limit";
 import { parseImagesText, propertySchema } from "./validations";
 
 export type ActionState = {
   success?: boolean;
   message?: string;
   errors?: Record<string, string[]>;
+  /** Valores enviados, para repreencher o formulário quando há erro. */
+  values?: Record<string, string>;
 };
 
 function formDataToPayload(formData: FormData) {
@@ -80,6 +84,52 @@ export async function deletePropertyAction(id: string) {
 
   await prisma.property.delete({ where: { id } });
   refreshPropertyPages();
+}
+
+export async function createLeadAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  // Honeypot: campo invisível que só robôs preenchem. Finge sucesso para não dar pistas.
+  if (String(formData.get("website") ?? "")) {
+    return { success: true, message: "Recebemos seu contato! Em breve nossa equipe falará com você." };
+  }
+
+  const ip = await getClientIp();
+  const values = {
+    name: String(formData.get("name") ?? ""),
+    email: String(formData.get("email") ?? ""),
+    phone: String(formData.get("phone") ?? ""),
+    message: String(formData.get("message") ?? "")
+  };
+
+  const parsed = leadSchema.safeParse({
+    ...values,
+    propertyId: formData.get("propertyId"),
+    message: values.message || undefined
+  });
+
+  if (!parsed.success) {
+    return { success: false, message: "Revise os campos destacados.", errors: parsed.error.flatten().fieldErrors, values };
+  }
+
+  // O limite conta só envios válidos, para erros de digitação não bloquearem o cliente.
+  if (!checkRateLimit(`lead:${ip}`, 5, 10 * 60 * 1000).allowed) {
+    return { success: false, message: "Muitos envios em pouco tempo. Tente novamente em alguns minutos.", values };
+  }
+
+  const lead = await createLead(parsed.data);
+  if (!lead) return { success: false, message: "Este imóvel não está mais disponível.", values };
+
+  revalidatePath("/admin/leads");
+  return { success: true, message: "Recebemos seu contato! Em breve nossa equipe falará com você." };
+}
+
+export async function updateLeadStatusAction(id: string, formData: FormData) {
+  await requireCurrentUser("/admin/leads");
+
+  const status = String(formData.get("status") ?? "");
+  if (!isLeadStatus(status)) return;
+
+  await prisma.lead.update({ where: { id }, data: { status } });
+  revalidatePath("/admin/leads");
 }
 
 function getSafeRedirectPath(value: FormDataEntryValue | null) {
