@@ -1,7 +1,17 @@
+import { PropertyStatus } from "@prisma/client";
 import { z } from "zod";
+import { amenityKeys } from "./amenities";
+
 
 export const propertyTypeEnum = z.enum(["APARTMENT", "HOUSE", "COMMERCIAL", "LAND"]);
 export const transactionTypeEnum = z.enum(["SALE", "RENT"]);
+export const propertyStatusEnum = z.nativeEnum(PropertyStatus);
+
+// Valor monetário opcional: vazio vira null.
+const optionalMoney = z.preprocess(
+  (value) => (value === "" || value === null || value === undefined ? null : value),
+  z.coerce.number().nonnegative("Valor inválido").nullable()
+);
 
 export const imageUrlSchema = z.string().refine(
   (val) => {
@@ -30,6 +40,13 @@ export const propertySchema = z.object({
   neighborhood: z.string().min(2, "Bairro obrigatório"),
   address: z.string().min(5, "Endereço obrigatório"),
   featured: z.coerce.boolean().default(false),
+  status: propertyStatusEnum.default("AVAILABLE"),
+  condoFee: optionalMoney.default(null),
+  iptu: optionalMoney.default(null),
+  parkingSpaces: z.coerce.number().int().min(0, "Valor inválido").default(0),
+  furnished: z.coerce.boolean().default(false),
+  petFriendly: z.coerce.boolean().default(false),
+  amenities: z.array(z.enum(amenityKeys as [string, ...string[]])).default([]),
   images: z.array(imageUrlSchema).min(1, "Informe ao menos uma imagem")
 });
 

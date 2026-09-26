@@ -30,6 +30,13 @@ function formDataToPayload(formData: FormData) {
     neighborhood: formData.get("neighborhood"),
     address: formData.get("address"),
     featured: formData.get("featured") === "on" || formData.get("featured") === "true",
+    status: formData.get("status") || undefined,
+    condoFee: formData.get("condoFee"),
+    iptu: formData.get("iptu"),
+    parkingSpaces: formData.get("parkingSpaces") || 0,
+    furnished: formData.get("furnished") === "on",
+    petFriendly: formData.get("petFriendly") === "on",
+    amenities: formData.getAll("amenities").map(String),
     images: parseImagesText(String(formData.get("imagesText") ?? ""))
   };
 }

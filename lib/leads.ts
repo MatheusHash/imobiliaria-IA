@@ -1,6 +1,7 @@
 import { LeadStatus, Prisma, Role } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "./prisma";
+import { ACCEPTS_LEADS_STATUSES } from "./property-status";
 
 export const leadSchema = z.object({
   propertyId: z.string().uuid("Imóvel inválido"),
@@ -34,8 +35,8 @@ export function leadScope(user: { id: string; role: Role }): Prisma.LeadWhereInp
 }
 
 export async function createLead(data: LeadInput) {
-  const property = await prisma.property.findUnique({ where: { id: data.propertyId }, select: { id: true } });
-  if (!property) return null;
+  const property = await prisma.property.findUnique({ where: { id: data.propertyId }, select: { status: true } });
+  if (!property || !ACCEPTS_LEADS_STATUSES.includes(property.status)) return null;
 
   return prisma.lead.create({ data });
 }
