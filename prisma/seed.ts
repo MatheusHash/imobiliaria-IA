@@ -17,6 +17,11 @@ const properties = [
     neighborhood: "Moema",
     address: "Av. Ibirapuera, 1200",
     featured: true,
+    condoFee: 850,
+    iptu: 2400,
+    parkingSpaces: 2,
+    petFriendly: true,
+    amenities: ["pool", "gym", "partyRoom", "elevator", "concierge", "balcony"],
     images: ["/uploads/seed-1/img-1.svg", "/uploads/seed-1/img-2.svg"]
   },
   {
@@ -32,6 +37,10 @@ const properties = [
     neighborhood: "Cambuí",
     address: "Rua das Acácias, 45",
     featured: true,
+    iptu: 4800,
+    parkingSpaces: 4,
+    petFriendly: true,
+    amenities: ["pool", "barbecue", "gourmetArea", "garden", "solarEnergy"],
     images: ["/uploads/seed-2/img-1.svg", "/uploads/seed-2/img-2.svg"]
   },
   {
@@ -47,6 +56,11 @@ const properties = [
     neighborhood: "Batel",
     address: "Rua Vicente Machado, 800",
     featured: false,
+    condoFee: 1200,
+    iptu: 3600,
+    parkingSpaces: 1,
+    furnished: true,
+    amenities: ["elevator", "concierge", "airConditioning"],
     images: ["/uploads/seed-3/img-1.svg"]
   },
   {
@@ -62,6 +76,9 @@ const properties = [
     neighborhood: "Jurerê Internacional",
     address: "Alameda dos Ipês, lote 18",
     featured: false,
+    condoFee: 450,
+    iptu: 1200,
+    amenities: ["concierge", "playground", "partyRoom"],
     images: ["/uploads/seed-4/img-1.svg"]
   },
   {

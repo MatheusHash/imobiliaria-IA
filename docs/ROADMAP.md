@@ -122,17 +122,17 @@ model User {
 
 ### 3. Status do imóvel
 
-- [ ] Campo `status`: `DRAFT` (rascunho), `AVAILABLE` (disponível), `RESERVED` (reservado), `SOLD` (vendido), `RENTED` (alugado), `INACTIVE` (inativo)
-- [ ] Site público lista apenas `AVAILABLE`
-- [ ] Links de imóveis vendidos/alugados mostram aviso e sugerem imóveis semelhantes (em vez de 404)
-- [ ] Hoje a única opção é excluir, o que apaga histórico e quebraria o vínculo com leads
+- [x] Campo `status`: `DRAFT` (rascunho), `AVAILABLE` (disponível), `RESERVED` (reservado), `SOLD` (vendido), `RENTED` (alugado), `INACTIVE` (inativo)
+- [x] Site público lista apenas `AVAILABLE`
+- [x] Links de imóveis vendidos/alugados mostram aviso e sugerem imóveis semelhantes (em vez de 404)
+- [x] Hoje a única opção é excluir, o que apaga histórico e quebraria o vínculo com leads
 
 ### 4. Campos que faltam em imóveis no Brasil
 
-- [ ] Condomínio e IPTU (usar o `CurrencyInput` existente)
-- [ ] Vagas de garagem
-- [ ] Mobiliado, aceita pet
-- [ ] Características/comodidades (piscina, churrasqueira, portaria 24h, elevador…) — lista de checkboxes
+- [x] Condomínio e IPTU (usar o `CurrencyInput` existente)
+- [x] Vagas de garagem
+- [x] Mobiliado, aceita pet
+- [x] Características/comodidades (piscina, churrasqueira, portaria 24h, elevador…) — lista de checkboxes
 
 ---
 

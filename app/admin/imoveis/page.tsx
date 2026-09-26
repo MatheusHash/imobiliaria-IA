@@ -6,13 +6,15 @@ import { DeletePropertyButton } from "@/components/properties/delete-property-bu
 import { LinkButton } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/field";
 import { getProperties, type PropertyFilters } from "@/lib/properties";
+import { propertyStatuses, propertyStatusLabels } from "@/lib/property-status";
+import { Badge } from "@/components/ui/badge";
 import { formatCurrency, propertyTypeLabel, transactionTypeLabel } from "@/lib/utils";
 
 type PageProps = { searchParams: Promise<PropertyFilters> };
 
 export default async function AdminPropertiesPage({ searchParams }: PageProps) {
   const filters = await searchParams;
-  const properties = await getProperties(filters);
+  const properties = await getProperties(filters, "admin");
 
   return (
     <main className="container-page py-10">
@@ -24,10 +26,11 @@ export default async function AdminPropertiesPage({ searchParams }: PageProps) {
         <LinkButton href="/admin/imoveis/novo">Novo Imóvel</LinkButton>
       </div>
 
-      <form className="mb-6 grid gap-3 rounded-xl border bg-background p-4 md:grid-cols-5">
+      <form className="mb-6 grid gap-3 rounded-xl border bg-background p-4 md:grid-cols-6">
         <div className="md:col-span-2"><Label htmlFor="q">Buscar por título ou código</Label><Input id="q" name="q" defaultValue={filters.q ?? ""} placeholder="Ex.: Casa com jardim ou 1001" /></div>
         <div><Label htmlFor="type">Tipo</Label><Select id="type" name="type" defaultValue={filters.type ?? ""}><option value="">Todos</option><option value="APARTMENT">Apartamento</option><option value="HOUSE">Casa</option><option value="COMMERCIAL">Comercial</option><option value="LAND">Terreno</option></Select></div>
         <div><Label htmlFor="transactionType">Transação</Label><Select id="transactionType" name="transactionType" defaultValue={filters.transactionType ?? ""}><option value="">Todas</option><option value="SALE">Venda</option><option value="RENT">Aluguel</option></Select></div>
+        <div><Label htmlFor="status">Status</Label><Select id="status" name="status" defaultValue={filters.status ?? ""}><option value="">Todos</option>{propertyStatuses.map((status) => <option key={status} value={status}>{propertyStatusLabels[status]}</option>)}</Select></div>
         <button className="mt-6 h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">Filtrar</button>
       </form>
 
@@ -42,6 +45,7 @@ export default async function AdminPropertiesPage({ searchParams }: PageProps) {
                 <th className="px-4 py-3">Transação</th>
                 <th className="px-4 py-3">Cidade</th>
                 <th className="px-4 py-3">Preço</th>
+                <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Destaque</th>
                 <th className="px-4 py-3 text-right">Ações</th>
               </tr>
@@ -55,6 +59,7 @@ export default async function AdminPropertiesPage({ searchParams }: PageProps) {
                   <td className="px-4 py-3">{transactionTypeLabel(property.transactionType)}</td>
                   <td className="px-4 py-3">{property.city}</td>
                   <td className="px-4 py-3">{formatCurrency(property.price, property.transactionType)}</td>
+                  <td className="px-4 py-3"><Badge className={property.status === "AVAILABLE" ? "bg-emerald-600 text-white" : ""}>{propertyStatusLabels[property.status]}</Badge></td>
                   <td className="px-4 py-3">{property.featured ? "Sim" : "Não"}</td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-2">
@@ -66,7 +71,7 @@ export default async function AdminPropertiesPage({ searchParams }: PageProps) {
                 </tr>
               ))}
               {properties.length === 0 && (
-                <tr><td className="px-4 py-8 text-center text-primary" colSpan={8}>Nenhum imóvel cadastrado.</td></tr>
+                <tr><td className="px-4 py-8 text-center text-primary" colSpan={9}>Nenhum imóvel cadastrado.</td></tr>
               )}
             </tbody>
           </table>

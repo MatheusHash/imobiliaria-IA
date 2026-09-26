@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Bath, BedDouble, MapPin, Ruler } from "lucide-react";
+import { Bath, BedDouble, Car, MapPin, Ruler } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { PropertyDTO } from "@/lib/properties";
@@ -35,9 +35,10 @@ export function PropertyCard({ property }: { property: PropertyDTO }) {
           <p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4" /> {property.city}, {property.neighborhood}
           </p>
-          <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+          <div className="mt-4 grid grid-cols-4 gap-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1"><BedDouble className="h-4 w-4" /> {property.bedrooms}</span>
             <span className="flex items-center gap-1"><Bath className="h-4 w-4" /> {property.bathrooms}</span>
+            <span className="flex items-center gap-1"><Car className="h-4 w-4" /> {property.parkingSpaces}</span>
             <span className="flex items-center gap-1"><Ruler className="h-4 w-4" /> {property.area} m²</span>
           </div>
         </CardContent>

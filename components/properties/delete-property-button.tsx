@@ -9,7 +9,7 @@ export function DeletePropertyButton({ id }: { id: string }) {
   const [pending, startTransition] = useTransition();
 
   function handleDelete() {
-    if (!window.confirm("Tem certeza que deseja deletar este imóvel?")) return;
+    if (!window.confirm("Excluir este imóvel definitivamente?\n\nSe ele foi vendido, alugado ou saiu do ar, prefira editar e mudar o status: assim o histórico e o link continuam existindo.")) return;
     startTransition(async () => {
       await deletePropertyAction(id);
     });

@@ -7,6 +7,8 @@ import { X, Upload } from "lucide-react";
 import Image from "next/image";
 import type { PropertyDTO } from "@/lib/properties";
 import { createPropertyAction, updatePropertyAction, type ActionState } from "@/lib/actions";
+import { amenityKeys, amenityLabels } from "@/lib/amenities";
+import { propertyStatuses, propertyStatusLabels } from "@/lib/property-status";
 import { propertyFormSchema, type PropertyFormInput } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -95,6 +97,19 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
       )}
 
       <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <Label htmlFor="status">Status</Label>
+          <Select id="status" name="status" defaultValue={property?.status ?? "AVAILABLE"}>
+            {propertyStatuses.map((status) => (
+              <option key={status} value={status}>
+                {propertyStatusLabels[status]}
+              </option>
+            ))}
+          </Select>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Só imóveis &quot;Disponível&quot; aparecem na busca do site. Vendidos e alugados continuam acessíveis pelo link, com aviso.
+          </p>
+        </div>
         <div className="md:col-span-2">
           <Label htmlFor="title">Título</Label>
           <Input id="title" {...form.register("title")} />
@@ -152,6 +167,48 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
           <Label htmlFor="address">Endereço</Label>
           <Input id="address" {...form.register("address")} />
         </div>
+        <div>
+          <Label htmlFor="condoFee">Condomínio (mensal)</Label>
+          <CurrencyInput id="condoFee" name="condoFee" defaultValue={property?.condoFee} />
+          <FieldError message={serverError("condoFee")} />
+        </div>
+        <div>
+          <Label htmlFor="iptu">IPTU (anual)</Label>
+          <CurrencyInput id="iptu" name="iptu" defaultValue={property?.iptu} />
+          <FieldError message={serverError("iptu")} />
+        </div>
+        <div>
+          <Label htmlFor="parkingSpaces">Vagas de garagem</Label>
+          <Input id="parkingSpaces" name="parkingSpaces" type="number" min="0" defaultValue={property?.parkingSpaces ?? 0} />
+          <FieldError message={serverError("parkingSpaces")} />
+        </div>
+        <div className="flex flex-wrap items-end gap-6 pb-2">
+          <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <input type="checkbox" name="furnished" defaultChecked={property?.furnished} className="h-4 w-4 rounded border-border" />
+            Mobiliado
+          </label>
+          <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <input type="checkbox" name="petFriendly" defaultChecked={property?.petFriendly} className="h-4 w-4 rounded border-border" />
+            Aceita pet
+          </label>
+        </div>
+        <fieldset className="md:col-span-2">
+          <legend className="text-sm font-medium text-foreground">Comodidades</legend>
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {amenityKeys.map((amenity) => (
+              <label key={amenity} className="flex items-center gap-2 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  name="amenities"
+                  value={amenity}
+                  defaultChecked={property?.amenities.includes(amenity)}
+                  className="h-4 w-4 rounded border-border"
+                />
+                {amenityLabels[amenity]}
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         {/* Upload de imagens */}
         <div className="md:col-span-2">
