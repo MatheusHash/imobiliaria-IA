@@ -10,14 +10,20 @@ Sistema web inicial para imobiliária criado com Next.js App Router, TypeScript,
 cp .env.example .env
 ```
 
-2. Ajuste `DATABASE_URL` no `.env` para seu PostgreSQL.
+2. Ajuste `DATABASE_URL` no `.env` para seu PostgreSQL (ou suba o banco local com `docker compose up -d`) e defina um `AUTH_SECRET` aleatório.
 
-4. Aplique as migrações, gere o client Prisma e popule o banco:
+3. Instale as dependências, aplique as migrações e popule o banco:
 
 ```bash
 npm install
 npx prisma migrate dev --name init
 npm run db:seed
+```
+
+4. Rode o projeto:
+
+```bash
+npm run dev
 ```
 
 ## Credenciais de acesso
@@ -26,12 +32,6 @@ Após executar o seed, utilize estas credenciais na página `/login`:
 
 - **E-mail:** `admin@primelar.com`
 - **Senha:** `admin123`
-
-4. Rode o projeto:
-
-```bash
-npm run dev
-```
 
 ## Rotas principais
 

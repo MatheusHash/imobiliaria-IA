@@ -4,3 +4,9 @@ node_modules
 .env.local
 .DS_Store
 *.log
+*.tsbuildinfo
+public/uploads/*
+!public/uploads/placeholder.svg
+!public/uploads/seed-*/
+.kdev4/
+*.kdev4
