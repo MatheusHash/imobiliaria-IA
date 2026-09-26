@@ -5,7 +5,11 @@ import type { PropertyFilters } from "@/lib/properties";
 
 export function SearchForm({ filters = {}, compact = false }: { filters?: PropertyFilters; compact?: boolean }) {
   return (
-    <form action="/imoveis" className={compact ? "grid gap-3 md:grid-cols-6" : "grid gap-4 rounded-2xl border bg-background p-4 shadow-xl md:grid-cols-5"}>
+    <form action="/imoveis" className={compact ? "grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7" : "grid gap-4 rounded-2xl border bg-background p-4 shadow-xl sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7"}>
+      <div>
+        <Label htmlFor="code">Código</Label>
+        <Input id="code" name="code" inputMode="numeric" pattern="[0-9]*" placeholder="Ex.: 1001" defaultValue={filters.code ?? ""} />
+      </div>
       <div>
         <Label htmlFor="type">Tipo</Label>
         <Select id="type" name="type" defaultValue={filters.type ?? ""}>
@@ -34,10 +38,10 @@ export function SearchForm({ filters = {}, compact = false }: { filters?: Proper
       </div>
       <div>
         <Label htmlFor="maxPrice">Preço máx.</Label>
-        <div className="flex gap-2">
-          <CurrencyInput id="maxPrice" name="maxPrice" defaultValue={filters.maxPrice} />
-          <Button type="submit">Buscar</Button>
-        </div>
+        <CurrencyInput id="maxPrice" name="maxPrice" defaultValue={filters.maxPrice} />
+      </div>
+      <div className="flex items-end sm:col-span-2 lg:col-span-1">
+        <Button type="submit" className="w-full">Buscar</Button>
       </div>
     </form>
   );

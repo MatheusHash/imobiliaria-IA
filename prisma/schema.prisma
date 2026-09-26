@@ -32,6 +32,8 @@ model User {
 
 model Property {
   id              String          @id @default(uuid())
+  /// Código numérico curto e sequencial exibido ao cliente (ex.: 1001), fácil de memorizar.
+  code            Int             @unique @default(autoincrement())
   title           String
   description     String          @db.Text
   price           Decimal         @db.Decimal(12, 2)

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { getPropertyById } from "@/lib/properties";
+import { getPropertyByCodeOrId } from "@/lib/properties";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   const { id } = await context.params;
-  const property = await getPropertyById(id);
+  const property = await getPropertyByCodeOrId(id);
 
   if (!property) {
     return NextResponse.json({ message: "Imóvel não encontrado" }, { status: 404 });

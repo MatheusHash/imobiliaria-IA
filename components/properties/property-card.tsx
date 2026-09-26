@@ -10,7 +10,7 @@ export function PropertyCard({ property }: { property: PropertyDTO }) {
   const image = property.images[0] ?? "/uploads/placeholder.svg";
 
   return (
-    <Link href={`/imoveis/${property.id}`} className="group block h-full">
+    <Link href={`/imoveis/${property.code}`} className="group block h-full">
       <Card className="h-full overflow-hidden transition hover:-translate-y-1 hover:shadow-lg">
         <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
           <Image
@@ -27,7 +27,10 @@ export function PropertyCard({ property }: { property: PropertyDTO }) {
           </div>
         </div>
         <CardContent>
-          <p className="text-lg font-bold text-foreground">{formatCurrency(property.price, property.transactionType)}</p>
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-lg font-bold text-foreground">{formatCurrency(property.price, property.transactionType)}</p>
+            <span className="shrink-0 text-xs font-medium text-muted-foreground">Cód. {property.code}</span>
+          </div>
           <h3 className="mt-2 line-clamp-2 text-base font-semibold text-foreground">{property.title}</h3>
           <p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4" /> {property.city}, {property.neighborhood}

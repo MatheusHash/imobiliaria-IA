@@ -2,6 +2,7 @@ import { Prisma, PropertyType, TransactionType } from "@prisma/client";
 import { prisma } from "./prisma";
 
 export type PropertyFilters = {
+  code?: string;
   type?: string;
   transactionType?: string;
   city?: string;
@@ -12,6 +13,7 @@ export type PropertyFilters = {
 
 export type PropertyDTO = {
   id: string;
+  code: number;
   title: string;
   description: string;
   price: number;
@@ -46,13 +48,29 @@ function toDTO(property: Awaited<ReturnType<typeof prisma.property.findFirst>>):
   };
 }
 
+/** Converte "1001" em 1001; qualquer outro formato retorna null. */
+export function parsePropertyCode(value?: string | null) {
+  const trimmed = value?.trim();
+  if (!trimmed || !/^\d{1,9}$/.test(trimmed)) return null;
+  return Number(trimmed);
+}
+
 export function buildPropertyWhere(filters: PropertyFilters = {}): Prisma.PropertyWhereInput {
   const where: Prisma.PropertyWhereInput = {};
 
   if (includeType(filters.type)) where.type = filters.type;
   if (includeTransactionType(filters.transactionType)) where.transactionType = filters.transactionType;
   if (filters.city) where.city = { contains: filters.city, mode: "insensitive" };
-  if (filters.q) where.title = { contains: filters.q, mode: "insensitive" };
+  if (filters.q) {
+    const qCode = parsePropertyCode(filters.q);
+    where.OR = [
+      { title: { contains: filters.q, mode: "insensitive" } },
+      ...(qCode !== null ? [{ code: qCode }] : [])
+    ];
+  }
+
+  const code = parsePropertyCode(filters.code);
+  if (code !== null) where.code = code;
 
   const min = filters.minPrice ? Number(filters.minPrice) : undefined;
   const max = filters.maxPrice ? Number(filters.maxPrice) : undefined;
@@ -86,4 +104,15 @@ export async function getFeaturedProperties() {
 export async function getPropertyById(id: string) {
   const property = await prisma.property.findUnique({ where: { id } });
   return property ? toDTO(property) : null;
+}
+
+export async function getPropertyByCode(code: number) {
+  const property = await prisma.property.findUnique({ where: { code } });
+  return property ? toDTO(property) : null;
+}
+
+/** Busca pelo código numérico ("1001") ou, para links antigos, pelo id interno (UUID). */
+export async function getPropertyByCodeOrId(value: string) {
+  const code = parsePropertyCode(value);
+  return code !== null ? getPropertyByCode(code) : getPropertyById(value);
 }

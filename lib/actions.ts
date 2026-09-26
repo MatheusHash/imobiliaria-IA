@@ -67,9 +67,9 @@ export async function updatePropertyAction(id: string, _prevState: ActionState, 
     };
   }
 
-  await prisma.property.update({ where: { id }, data: parsed.data });
+  const property = await prisma.property.update({ where: { id }, data: parsed.data });
   refreshPropertyPages();
-  revalidatePath(`/imoveis/${id}`);
+  revalidatePath(`/imoveis/${property.code}`);
   revalidatePath(`/admin/imoveis/${id}/editar`);
 
   return { success: true, message: "Imóvel atualizado com sucesso." };
