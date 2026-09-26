@@ -161,7 +161,7 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
               {uploading ? "Enviando..." : "Clique para selecionar imagens"}
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
                 multiple
                 className="hidden"
                 onChange={handleFileUpload}

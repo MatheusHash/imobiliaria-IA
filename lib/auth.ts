@@ -21,12 +21,16 @@ export type AuthUser = {
   email: string;
 };
 
+const INSECURE_SECRETS = new Set(["change-me-in-production", "dev-secret-change-me-before-production"]);
+
 function getSessionSecret() {
-  return (
-    process.env.AUTH_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
-    "dev-secret-change-me-before-production"
-  );
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+
+  if (process.env.NODE_ENV === "production" && (!secret || INSECURE_SECRETS.has(secret))) {
+    throw new Error("AUTH_SECRET precisa ser definido com um valor aleatório em produção.");
+  }
+
+  return secret || "dev-secret-change-me-before-production";
 }
 
 function base64UrlEncode(value: string | Buffer) {

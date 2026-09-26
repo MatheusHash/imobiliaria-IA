@@ -5,6 +5,14 @@ import path from "path";
 import { isRequestAuthenticated } from "@/lib/auth";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
+const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
+const EXTENSIONS_BY_MIME: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+  "image/avif": ".avif"
+};
 
 export async function POST(request: Request) {
   if (!isRequestAuthenticated(request)) {
@@ -15,6 +23,10 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const files = formData.getAll("files") as File[];
     const propertyId = formData.get("propertyId") as string | null;
+
+    if (propertyId && !SAFE_ID.test(propertyId)) {
+      return NextResponse.json({ message: "Imóvel inválido." }, { status: 400 });
+    }
 
     if (!files.length) {
       return NextResponse.json({ message: "Nenhum arquivo enviado." }, { status: 400 });
@@ -31,11 +43,13 @@ export async function POST(request: Request) {
     const uploaded: string[] = [];
 
     for (const file of files) {
-      if (!file.type.startsWith("image/")) {
-        return NextResponse.json({ message: `"${file.name}" não é uma imagem.` }, { status: 400 });
+      const ext = EXTENSIONS_BY_MIME[file.type];
+      if (!ext) {
+        return NextResponse.json(
+          { message: `"${file.name}" não é uma imagem suportada (JPG, PNG, WebP, GIF ou AVIF).` },
+          { status: 400 }
+        );
       }
-
-      const ext = path.extname(file.name) || ".jpg";
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
       const filePath = path.join(targetDir, fileName);
       const buffer = Buffer.from(await file.arrayBuffer());
