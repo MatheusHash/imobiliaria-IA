@@ -30,12 +30,12 @@ export function SearchForm({ filters = {}, compact = false }: { filters?: Proper
       </div>
       <div>
         <Label htmlFor="minPrice">Preço mín.</Label>
-        <CurrencyInput id="minPrice" name="minPrice" defaultValue={filters.minPrice} fractionDigits={0} />
+        <CurrencyInput id="minPrice" name="minPrice" defaultValue={filters.minPrice} />
       </div>
       <div>
         <Label htmlFor="maxPrice">Preço máx.</Label>
         <div className="flex gap-2">
-          <CurrencyInput id="maxPrice" name="maxPrice" defaultValue={filters.maxPrice} fractionDigits={0} />
+          <CurrencyInput id="maxPrice" name="maxPrice" defaultValue={filters.maxPrice} />
           <Button type="submit">Buscar</Button>
         </div>
       </div>
