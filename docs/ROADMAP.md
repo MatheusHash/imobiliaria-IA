@@ -151,10 +151,10 @@ model User {
 
 ### Admin
 
-- [ ] **Dashboard:** imóveis por status, leads novos na semana, imóveis mais vistos
-- [ ] **Imagens:** reordenar, escolher a capa, redimensionar/comprimir no upload
-- [ ] Mover imagens de `_temp` para a pasta do imóvel ao salvar (hoje ficam em `_temp` para sempre) e limpar órfãs
-- [ ] **Duplicar imóvel** para cadastrar unidades semelhantes
+- [x] **Dashboard:** imóveis por status, leads novos na semana, imóveis mais vistos
+- [x] **Imagens:** reordenar, escolher a capa, redimensionar/comprimir no upload
+- [x] Mover imagens de `_temp` para a pasta do imóvel ao salvar (hoje ficam em `_temp` para sempre) e limpar órfãs
+- [x] **Duplicar imóvel** para cadastrar unidades semelhantes
 
 ---
 

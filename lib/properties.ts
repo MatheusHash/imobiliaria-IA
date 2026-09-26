@@ -62,6 +62,7 @@ export type PropertyDTO = {
   furnished: boolean;
   petFriendly: boolean;
   amenities: string[];
+  viewCount: number;
   images: string[];
   createdAt: string;
   updatedAt: string;
@@ -212,4 +213,9 @@ export async function getSimilarProperties(property: PropertyDTO, take = 3) {
       : [];
 
   return [...sameCity, ...others].map((item) => toDTO(item));
+}
+
+/** SQL direto para não alterar o updatedAt (usado no sitemap como data de modificação). */
+export async function incrementPropertyViews(id: string) {
+  await prisma.$executeRaw`UPDATE "Property" SET "viewCount" = "viewCount" + 1 WHERE "id" = ${id}`;
 }

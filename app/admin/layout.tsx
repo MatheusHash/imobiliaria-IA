@@ -21,6 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </div>
             <AdminNav
               items={[
+                { href: "/admin", label: "Painel", exact: true },
                 { href: "/admin/imoveis", label: "Imóveis" },
                 { href: "/admin/leads", label: "Leads", badge: newLeads },
                 ...(user.role === "ADMIN" ? [{ href: "/admin/usuarios", label: "Usuários" }] : []),

@@ -9,7 +9,7 @@ type PageProps = { searchParams: Promise<{ next?: string }> };
 
 function getSafeNextPath(next?: string) {
   if (!next || !next.startsWith("/") || next.startsWith("//")) {
-    return "/admin/imoveis";
+    return "/admin";
   }
 
   return next;

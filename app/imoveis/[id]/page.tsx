@@ -9,7 +9,7 @@ import { PropertyGrid } from "@/components/properties/property-grid";
 import { amenityLabels, isAmenity } from "@/lib/amenities";
 import { getCurrentUser } from "@/lib/auth";
 import { whatsappLink } from "@/lib/leads";
-import { getPropertyByCodeOrId, getSimilarProperties, parsePropertyCode } from "@/lib/properties";
+import { getPropertyByCodeOrId, getSimilarProperties, incrementPropertyViews, parsePropertyCode } from "@/lib/properties";
 import { ACCEPTS_LEADS_STATUSES, PUBLIC_PAGE_STATUSES, propertyStatusLabels } from "@/lib/property-status";
 import { siteConfig } from "@/lib/site";
 import { formatCurrency, propertyTypeLabel, transactionTypeLabel } from "@/lib/utils";
@@ -56,10 +56,14 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
   const property = await getPropertyByCodeOrId(id);
 
   if (!property) notFound();
+  const viewer = await getCurrentUser();
   // Rascunhos e inativos só podem ser vistos pela equipe (pré-visualização).
-  if (!PUBLIC_PAGE_STATUSES.includes(property.status) && !(await getCurrentUser())) notFound();
+  if (!PUBLIC_PAGE_STATUSES.includes(property.status) && !viewer) notFound();
   // Links antigos usavam o UUID; o endereço público oficial é o código.
   if (parsePropertyCode(id) === null) permanentRedirect(`/imoveis/${property.code}`);
+
+  // Conta só visitas de clientes, não da equipe.
+  if (!viewer) await incrementPropertyViews(property.id);
 
   const acceptsLeads = ACCEPTS_LEADS_STATUSES.includes(property.status);
   const notice = property.status === "AVAILABLE" ? null : statusNotices[property.status];

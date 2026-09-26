@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { X, Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, Upload, X } from "lucide-react";
 import Image from "next/image";
 import type { PropertyDTO } from "@/lib/properties";
 import { createPropertyAction, updatePropertyAction, type ActionState } from "@/lib/actions";
@@ -74,6 +74,22 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
 
   function removeUploaded(index: number) {
     setUploadedPaths((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  /** Troca a imagem de posição com a vizinha (-1 = esquerda, 1 = direita). */
+  function moveImage(index: number, direction: -1 | 1) {
+    setUploadedPaths((prev) => {
+      const target = index + direction;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
+  /** A primeira imagem é a capa (usada no card e no preview do WhatsApp). */
+  function makeCover(index: number) {
+    setUploadedPaths((prev) => [prev[index], ...prev.filter((_, i) => i !== index)]);
   }
 
   return (
@@ -229,20 +245,44 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
           </div>
 
           {uploadedPaths.length > 0 && (
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-              {uploadedPaths.map((path, index) => (
-                <div key={`${path}-${index}`} className="group relative aspect-[4/3] overflow-hidden rounded-lg border bg-secondary">
-                  <Image src={path} alt={`Imagem ${index + 1}`} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
-                  <button
-                    type="button"
-                    onClick={() => removeUploaded(index)}
-                    className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white opacity-0 transition group-hover:opacity-100"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
+            <>
+              <p className="mt-3 text-xs text-muted-foreground">
+                A primeira imagem é a capa: aparece nos cards e no preview do link. Use as setas para reordenar.
+              </p>
+              <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                {uploadedPaths.map((path, index) => (
+                  <div key={`${path}-${index}`} className="group relative aspect-[4/3] overflow-hidden rounded-lg border bg-secondary">
+                    <Image src={path} alt={`Imagem ${index + 1}`} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
+                    {index === 0 && (
+                      <span className="absolute left-1 top-1 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">Capa</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeUploaded(index)}
+                      aria-label={`Remover imagem ${index + 1}`}
+                      className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-white transition sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                    <div className="absolute inset-x-1 bottom-1 flex items-center justify-between gap-1 transition sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+                      <div className="flex gap-1">
+                        <ImageControl label="Mover para a esquerda" disabled={index === 0} onClick={() => moveImage(index, -1)}>
+                          <ChevronLeft className="h-4 w-4" />
+                        </ImageControl>
+                        <ImageControl label="Mover para a direita" disabled={index === uploadedPaths.length - 1} onClick={() => moveImage(index, 1)}>
+                          <ChevronRight className="h-4 w-4" />
+                        </ImageControl>
+                      </div>
+                      {index > 0 && (
+                        <ImageControl label="Definir como capa" onClick={() => makeCover(index)}>
+                          <Star className="h-4 w-4" />
+                        </ImageControl>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
@@ -258,5 +298,30 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
         </Button>
       </div>
     </form>
+  );
+}
+
+function ImageControl({
+  label,
+  disabled,
+  onClick,
+  children
+}: {
+  label: string;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className="flex h-7 w-7 items-center justify-center rounded-full bg-background/90 text-foreground hover:bg-primary hover:text-primary-foreground disabled:opacity-40"
+    >
+      {children}
+    </button>
   );
 }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-export type AdminNavItem = { href: string; label: string; badge?: number };
+export type AdminNavItem = { href: string; label: string; badge?: number; exact?: boolean };
 
 export function AdminNav({ items }: { items: AdminNavItem[] }) {
   const pathname = usePathname();
@@ -12,7 +12,7 @@ export function AdminNav({ items }: { items: AdminNavItem[] }) {
   return (
     <nav className="flex flex-wrap gap-1 text-sm font-medium">
       {items.map((item) => {
-        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const active = pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`));
         return (
           <Link
             key={item.href}
