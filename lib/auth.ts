@@ -1,3 +1,4 @@
+import type { Role } from "@prisma/client";
 import { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -19,7 +20,11 @@ export type AuthUser = {
   id: string;
   name: string | null;
   email: string;
+  role: Role;
+  mustChangePassword: boolean;
 };
+
+const authUserSelect = { id: true, name: true, email: true, role: true, mustChangePassword: true, active: true } as const;
 
 const INSECURE_SECRETS = new Set(["change-me-in-production", "dev-secret-change-me-before-production"]);
 
@@ -116,16 +121,21 @@ export async function destroySession() {
   cookieStore.delete(SESSION_COOKIE);
 }
 
-export async function getCurrentUser(): Promise<AuthUser | null> {
-  const cookieStore = await cookies();
-  const payload = verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
-
+/** Busca o usuário da sessão no banco; sessões de usuários desativados ou excluídos são ignoradas. */
+async function findActiveUser(token?: string | null): Promise<AuthUser | null> {
+  const payload = verifySessionToken(token);
   if (!payload) return null;
 
-  return prisma.user.findUnique({
-    where: { id: payload.userId },
-    select: { id: true, name: true, email: true }
-  });
+  const user = await prisma.user.findUnique({ where: { id: payload.userId }, select: authUserSelect });
+  if (!user?.active) return null;
+
+  const { active: _active, ...authUser } = user;
+  return authUser;
+}
+
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  const cookieStore = await cookies();
+  return findActiveUser(cookieStore.get(SESSION_COOKIE)?.value);
 }
 
 export async function requireCurrentUser(next = "/admin/imoveis") {
@@ -135,10 +145,25 @@ export async function requireCurrentUser(next = "/admin/imoveis") {
     redirect(`/login?next=${encodeURIComponent(next)}`);
   }
 
+  if (user.mustChangePassword) {
+    redirect("/conta?primeiro-acesso=1");
+  }
+
   return user;
 }
 
-export function isRequestAuthenticated(request: Request) {
+export async function requireAdmin(next = "/admin/imoveis") {
+  const user = await requireCurrentUser(next);
+
+  if (user.role !== "ADMIN") {
+    redirect("/admin/imoveis");
+  }
+
+  return user;
+}
+
+/** Usuário autenticado de uma requisição de API (rotas /api/admin/*), ou null. */
+export async function getRequestUser(request: Request) {
   const cookieHeader = request.headers.get("cookie") ?? "";
   const token = cookieHeader
     .split(";")
@@ -146,5 +171,6 @@ export function isRequestAuthenticated(request: Request) {
     .find((cookie) => cookie.startsWith(`${SESSION_COOKIE}=`))
     ?.split("=")[1];
 
-  return Boolean(verifySessionToken(token));
+  const user = await findActiveUser(token);
+  return user && !user.mustChangePassword ? user : null;
 }

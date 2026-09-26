@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { isRequestAuthenticated } from "@/lib/auth";
+import { getRequestUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { propertySchema } from "@/lib/validations";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function PUT(request: Request, context: RouteContext) {
-  if (!isRequestAuthenticated(request)) {
+  if (!(await getRequestUser(request))) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
@@ -23,7 +23,7 @@ export async function PUT(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
-  if (!isRequestAuthenticated(request)) {
+  if (!(await getRequestUser(request))) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 

@@ -3,8 +3,9 @@ import { MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/field";
-import { updateLeadStatusAction } from "@/lib/actions";
-import { isLeadStatus, leadStatuses, leadStatusLabels, whatsappLink } from "@/lib/leads";
+import { assignLeadAction, updateLeadStatusAction } from "@/lib/actions";
+import { requireCurrentUser } from "@/lib/auth";
+import { isLeadStatus, leadScope, leadStatuses, leadStatusLabels, whatsappLink } from "@/lib/leads";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
@@ -22,16 +23,25 @@ const statusColors = {
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
 
 export default async function AdminLeadsPage({ searchParams }: PageProps) {
+  const user = await requireCurrentUser("/admin/leads");
+  const isAdmin = user.role === "ADMIN";
   const { status } = await searchParams;
   const activeStatus = isLeadStatus(status) ? status : undefined;
+  const scope = leadScope(user);
 
-  const [leads, counts] = await Promise.all([
+  const [leads, counts, assignees] = await Promise.all([
     prisma.lead.findMany({
-      where: activeStatus ? { status: activeStatus } : {},
-      include: { property: { select: { code: true, title: true } } },
+      where: { ...scope, ...(activeStatus ? { status: activeStatus } : {}) },
+      include: {
+        property: { select: { code: true, title: true } },
+        assignedTo: { select: { id: true, name: true, email: true, active: true } }
+      },
       orderBy: { createdAt: "desc" }
     }),
-    prisma.lead.groupBy({ by: ["status"], _count: true })
+    prisma.lead.groupBy({ by: ["status"], where: scope, _count: true }),
+    isAdmin
+      ? prisma.user.findMany({ where: { active: true }, select: { id: true, name: true, email: true }, orderBy: { name: "asc" } })
+      : Promise.resolve([])
   ]);
 
   const countByStatus = Object.fromEntries(counts.map((item) => [item.status, item._count]));
@@ -42,7 +52,11 @@ export default async function AdminLeadsPage({ searchParams }: PageProps) {
       <div className="mb-8">
         <p className="text-sm font-semibold uppercase tracking-wide text-primary">Administração</p>
         <h1 className="text-3xl font-bold text-foreground">Leads</h1>
-        <p className="mt-2 text-muted-foreground">Clientes que demonstraram interesse em um imóvel.</p>
+        <p className="mt-2 text-muted-foreground">
+          {isAdmin
+            ? "Clientes que demonstraram interesse em um imóvel."
+            : "Leads atribuídos a você e leads ainda sem responsável."}
+        </p>
       </div>
 
       <nav className="mb-6 flex flex-wrap gap-2 text-sm">
@@ -81,6 +95,13 @@ export default async function AdminLeadsPage({ searchParams }: PageProps) {
                     <span className="italic">imóvel excluído</span>
                   )}
                 </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Responsável:{" "}
+                  <span className="font-medium text-foreground">
+                    {lead.assignedTo ? lead.assignedTo.name ?? lead.assignedTo.email : "sem responsável"}
+                    {lead.assignedTo && !lead.assignedTo.active && " (desativado — reatribua este lead)"}
+                  </span>
+                </p>
                 {lead.message && <p className="mt-3 whitespace-pre-line text-sm text-foreground">{lead.message}</p>}
               </div>
 
@@ -97,7 +118,7 @@ export default async function AdminLeadsPage({ searchParams }: PageProps) {
                   <MessageCircle className="h-4 w-4" /> WhatsApp
                 </a>
                 <form action={updateLeadStatusAction.bind(null, lead.id)} className="flex gap-2">
-                  <Select name="status" defaultValue={lead.status} aria-label="Status do lead" className="w-44">
+                  <Select key={lead.status} name="status" defaultValue={lead.status} aria-label="Status do lead" className="w-44">
                     {leadStatuses.map((item) => (
                       <option key={item} value={item}>
                         {leadStatusLabels[item]}
@@ -108,6 +129,35 @@ export default async function AdminLeadsPage({ searchParams }: PageProps) {
                     Salvar
                   </Button>
                 </form>
+                {isAdmin ? (
+                  <form action={assignLeadAction.bind(null, lead.id)} className="flex gap-2">
+                    <Select key={lead.assignedToId ?? "none"} name="assignedToId" defaultValue={lead.assignedToId ?? ""} aria-label="Responsável" className="w-44">
+                      <option value="">Sem responsável</option>
+                      {lead.assignedTo && !assignees.some((assignee) => assignee.id === lead.assignedToId) && (
+                        <option value={lead.assignedTo.id}>
+                          {lead.assignedTo.name ?? lead.assignedTo.email} (desativado)
+                        </option>
+                      )}
+                      {assignees.map((assignee) => (
+                        <option key={assignee.id} value={assignee.id}>
+                          {assignee.name ?? assignee.email}
+                        </option>
+                      ))}
+                    </Select>
+                    <Button type="submit" variant="outline">
+                      Atribuir
+                    </Button>
+                  </form>
+                ) : (
+                  !lead.assignedToId && (
+                    <form action={assignLeadAction.bind(null, lead.id)}>
+                      <input type="hidden" name="assignedToId" value={user.id} />
+                      <Button type="submit" variant="outline" className="w-full">
+                        Assumir lead
+                      </Button>
+                    </form>
+                  )
+                )}
               </div>
             </div>
           </article>
