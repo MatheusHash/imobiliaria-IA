@@ -1,10 +1,11 @@
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
-import { Eye, Pencil } from "lucide-react";
+import { Copy, Eye, Pencil } from "lucide-react";
 import { DeletePropertyButton } from "@/components/properties/delete-property-button";
 import { LinkButton } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/field";
+import { duplicatePropertyAction } from "@/lib/actions";
 import { getProperties, type PropertyFilters } from "@/lib/properties";
 import { propertyStatuses, propertyStatusLabels } from "@/lib/property-status";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +66,9 @@ export default async function AdminPropertiesPage({ searchParams }: PageProps) {
                     <div className="flex justify-end gap-2">
                       <Link className="inline-flex h-8 items-center rounded-md border px-3 hover:bg-secondary" href={`/imoveis/${property.code}`}><Eye className="mr-1 h-4 w-4" />Ver</Link>
                       <Link className="inline-flex h-8 items-center rounded-md border px-3 hover:bg-secondary" href={`/admin/imoveis/${property.id}/editar`}><Pencil className="mr-1 h-4 w-4" />Editar</Link>
+                      <form action={duplicatePropertyAction.bind(null, property.id)}>
+                        <button type="submit" title="Criar uma cópia como rascunho" className="inline-flex h-8 items-center rounded-md border px-3 hover:bg-secondary"><Copy className="mr-1 h-4 w-4" />Duplicar</button>
+                      </form>
                       <DeletePropertyButton id={property.id} />
                     </div>
                   </td>

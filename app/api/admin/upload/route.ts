@@ -1,18 +1,9 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
-import path from "path";
 import { getRequestUser } from "@/lib/auth";
+import { isSafeFolder, saveImage, TEMP_FOLDER } from "@/lib/storage";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
-const EXTENSIONS_BY_MIME: Record<string, string> = {
-  "image/jpeg": ".jpg",
-  "image/png": ".png",
-  "image/webp": ".webp",
-  "image/gif": ".gif",
-  "image/avif": ".avif"
-};
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]);
+const MAX_FILE_BYTES = 15 * 1024 * 1024;
 
 export async function POST(request: Request) {
   if (!(await getRequestUser(request))) {
@@ -21,10 +12,10 @@ export async function POST(request: Request) {
 
   try {
     const formData = await request.formData();
-    const files = formData.getAll("files") as File[];
-    const propertyId = formData.get("propertyId") as string | null;
+    const files = formData.getAll("files").filter((file): file is File => file instanceof File);
+    const propertyId = formData.get("propertyId");
 
-    if (propertyId && !SAFE_ID.test(propertyId)) {
+    if (typeof propertyId === "string" && propertyId && !isSafeFolder(propertyId)) {
       return NextResponse.json({ message: "Imóvel inválido." }, { status: 400 });
     }
 
@@ -32,31 +23,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Nenhum arquivo enviado." }, { status: 400 });
     }
 
-    const targetDir = propertyId
-      ? path.join(UPLOAD_DIR, propertyId)
-      : path.join(UPLOAD_DIR, "_temp");
-
-    if (!existsSync(targetDir)) {
-      await mkdir(targetDir, { recursive: true });
-    }
-
-    const uploaded: string[] = [];
-
     for (const file of files) {
-      const ext = EXTENSIONS_BY_MIME[file.type];
-      if (!ext) {
+      if (!ALLOWED_TYPES.has(file.type)) {
         return NextResponse.json(
           { message: `"${file.name}" não é uma imagem suportada (JPG, PNG, WebP, GIF ou AVIF).` },
           { status: 400 }
         );
       }
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
-      const filePath = path.join(targetDir, fileName);
-      const buffer = Buffer.from(await file.arrayBuffer());
+      if (file.size > MAX_FILE_BYTES) {
+        return NextResponse.json({ message: `"${file.name}" é maior que 15 MB.` }, { status: 400 });
+      }
+    }
 
-      await writeFile(filePath, buffer);
+    const folder = typeof propertyId === "string" && propertyId ? propertyId : TEMP_FOLDER;
+    const uploaded: string[] = [];
 
-      uploaded.push(`/uploads/${propertyId ? `${propertyId}/` : "_temp/"}${fileName}`);
+    for (const file of files) {
+      try {
+        const saved = await saveImage(Buffer.from(await file.arrayBuffer()), folder);
+        uploaded.push(saved.path);
+      } catch {
+        // O tipo declarado pelo navegador não garante o conteúdo: o sharp rejeita arquivos que não são imagem.
+        return NextResponse.json({ message: `Não foi possível processar "${file.name}".` }, { status: 400 });
+      }
     }
 
     return NextResponse.json({ paths: uploaded }, { status: 201 });

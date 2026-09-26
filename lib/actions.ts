@@ -6,6 +6,7 @@ import { createSession, destroySession, requireCurrentUser, verifyPassword } fro
 import { createLead, isLeadStatus, leadSchema } from "./leads";
 import { prisma } from "./prisma";
 import { checkRateLimit, getClientIp, resetRateLimit } from "./rate-limit";
+import { moveTempImages } from "./storage";
 import { parseImagesText, propertySchema } from "./validations";
 
 export type ActionState = {
@@ -44,7 +45,7 @@ function formDataToPayload(formData: FormData) {
 function refreshPropertyPages() {
   revalidatePath("/");
   revalidatePath("/imoveis");
-  revalidatePath("/admin/imoveis");
+  revalidatePath("/admin", "layout");
 }
 
 export async function createPropertyAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -61,6 +62,11 @@ export async function createPropertyAction(_prevState: ActionState, formData: Fo
   }
 
   const property = await prisma.property.create({ data: parsed.data });
+  // Imagens enviadas antes de o imóvel existir ficam em _temp; agora vão para a pasta dele.
+  const images = await moveTempImages(parsed.data.images, property.id);
+  if (images.some((image, index) => image !== parsed.data.images[index])) {
+    await prisma.property.update({ where: { id: property.id }, data: { images } });
+  }
   refreshPropertyPages();
   redirect(`/admin/imoveis/${property.id}/editar?created=1`);
 }
@@ -78,12 +84,29 @@ export async function updatePropertyAction(id: string, _prevState: ActionState, 
     };
   }
 
-  const property = await prisma.property.update({ where: { id }, data: parsed.data });
+  const images = await moveTempImages(parsed.data.images, id);
+  const property = await prisma.property.update({ where: { id }, data: { ...parsed.data, images } });
   refreshPropertyPages();
   revalidatePath(`/imoveis/${property.code}`);
   revalidatePath(`/admin/imoveis/${id}/editar`);
 
   return { success: true, message: "Imóvel atualizado com sucesso." };
+}
+
+export async function duplicatePropertyAction(id: string) {
+  await requireCurrentUser();
+
+  const source = await prisma.property.findUnique({ where: { id } });
+  if (!source) return;
+
+  // Copia os dados; a cópia nasce como rascunho, sem destaque e sem visualizações.
+  const { id: _id, code: _code, createdAt: _createdAt, updatedAt: _updatedAt, viewCount: _viewCount, ...data } = source;
+  const copy = await prisma.property.create({
+    data: { ...data, title: `${source.title} (cópia)`, status: "DRAFT", featured: false }
+  });
+
+  refreshPropertyPages();
+  redirect(`/admin/imoveis/${copy.id}/editar?duplicated=1`);
 }
 
 export async function deletePropertyAction(id: string) {
@@ -125,7 +148,7 @@ export async function createLeadAction(_prevState: ActionState, formData: FormDa
   const lead = await createLead(parsed.data);
   if (!lead) return { success: false, message: "Este imóvel não está mais disponível.", values };
 
-  revalidatePath("/admin/leads");
+  revalidatePath("/admin", "layout");
   return { success: true, message: "Recebemos seu contato! Em breve nossa equipe falará com você." };
 }
 
@@ -178,10 +201,10 @@ export async function assignLeadAction(id: string, formData: FormData) {
 }
 
 function getSafeRedirectPath(value: FormDataEntryValue | null) {
-  const path = String(value ?? "/admin/imoveis");
+  const path = String(value ?? "/admin");
 
   if (!path.startsWith("/") || path.startsWith("//")) {
-    return "/admin/imoveis";
+    return "/admin";
   }
 
   return path;

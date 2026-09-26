@@ -4,10 +4,11 @@ export const dynamic = "force-dynamic";
 import { PropertyForm } from "@/components/properties/property-form";
 import { getPropertyById } from "@/lib/properties";
 
-type PageProps = { params: Promise<{ id: string }> };
+type PageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ created?: string; duplicated?: string }> };
 
-export default async function EditPropertyPage({ params }: PageProps) {
+export default async function EditPropertyPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const { created, duplicated } = await searchParams;
   const property = await getPropertyById(id);
 
   if (!property) notFound();
@@ -19,6 +20,12 @@ export default async function EditPropertyPage({ params }: PageProps) {
         <h1 className="text-3xl font-bold text-foreground">Editar imóvel</h1>
         <p className="mt-2 text-muted-foreground">Atualize as informações do imóvel <strong className="text-foreground">código {property.code}</strong>.</p>
       </div>
+      {duplicated && (
+        <div className="mb-6 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
+          Cópia criada como <strong>rascunho</strong>. Ajuste os dados e mude o status para &quot;Disponível&quot; quando quiser publicar.
+        </div>
+      )}
+      {created && <div className="mb-6 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">Imóvel cadastrado com sucesso.</div>}
       <PropertyForm property={property} />
     </main>
   );

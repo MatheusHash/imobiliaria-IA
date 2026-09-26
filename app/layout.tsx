@@ -32,7 +32,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               <Link className="hover:text-primary" href="/imoveis">Imóveis</Link>
               {user ? (
                 <>
-                  <Link className="hover:text-primary" href="/admin/imoveis">Admin</Link>
+                  <Link className="hover:text-primary" href="/admin">Admin</Link>
                 </>
               ) : (
                 <Link className="hover:text-primary" href="/login">Entrar</Link>
