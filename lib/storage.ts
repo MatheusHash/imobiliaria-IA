@@ -9,13 +9,25 @@ import sharp from "sharp";
 const PUBLIC_DIR = path.join(process.cwd(), "public");
 export const UPLOAD_DIR = path.join(PUBLIC_DIR, "uploads");
 export const TEMP_FOLDER = "_temp";
+/** Fotos de perfil dos corretores. */
+export const AVATAR_FOLDER = "corretores";
 
 const MAX_WIDTH = 1920;
+const AVATAR_SIZE = 512;
 const WEBP_QUALITY = 80;
 const SAFE_FOLDER = /^[A-Za-z0-9_-]{1,64}$/;
 
 export function isSafeFolder(folder: string) {
   return SAFE_FOLDER.test(folder);
+}
+
+async function writeWebp(output: Buffer, folder: string) {
+  const fileName = `${Date.now()}-${randomBytes(4).toString("hex")}.webp`;
+  const dir = path.join(UPLOAD_DIR, folder);
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, fileName), output);
+
+  return { path: `/uploads/${folder}/${fileName}`, bytes: output.length };
 }
 
 /**
@@ -31,12 +43,18 @@ export async function saveImage(input: Buffer, folder: string) {
     .webp({ quality: WEBP_QUALITY })
     .toBuffer();
 
-  const fileName = `${Date.now()}-${randomBytes(4).toString("hex")}.webp`;
-  const dir = path.join(UPLOAD_DIR, folder);
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, fileName), output);
+  return writeWebp(output, folder);
+}
 
-  return { path: `/uploads/${folder}/${fileName}`, bytes: output.length };
+/** Foto de perfil: recorte quadrado de 512px centralizado, em WebP, na pasta dos corretores. */
+export async function saveAvatar(input: Buffer) {
+  const output = await sharp(input)
+    .rotate()
+    .resize({ width: AVATAR_SIZE, height: AVATAR_SIZE, fit: "cover" })
+    .webp({ quality: WEBP_QUALITY })
+    .toBuffer();
+
+  return writeWebp(output, AVATAR_FOLDER);
 }
 
 /**

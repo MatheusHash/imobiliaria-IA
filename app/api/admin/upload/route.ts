@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/auth";
-import { isSafeFolder, saveImage, TEMP_FOLDER } from "@/lib/storage";
+import { isSafeFolder, saveAvatar, saveImage, TEMP_FOLDER } from "@/lib/storage";
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]);
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
@@ -14,6 +14,8 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const files = formData.getAll("files").filter((file): file is File => file instanceof File);
     const propertyId = formData.get("propertyId");
+    // "avatar" = foto de perfil de corretor (um arquivo, recorte quadrado).
+    const isAvatar = formData.get("kind") === "avatar";
 
     if (typeof propertyId === "string" && propertyId && !isSafeFolder(propertyId)) {
       return NextResponse.json({ message: "Imóvel inválido." }, { status: 400 });
@@ -21,6 +23,10 @@ export async function POST(request: Request) {
 
     if (!files.length) {
       return NextResponse.json({ message: "Nenhum arquivo enviado." }, { status: 400 });
+    }
+
+    if (isAvatar && files.length > 1) {
+      return NextResponse.json({ message: "Envie apenas uma foto de perfil." }, { status: 400 });
     }
 
     for (const file of files) {
@@ -40,7 +46,8 @@ export async function POST(request: Request) {
 
     for (const file of files) {
       try {
-        const saved = await saveImage(Buffer.from(await file.arrayBuffer()), folder);
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const saved = isAvatar ? await saveAvatar(buffer) : await saveImage(buffer, folder);
         uploaded.push(saved.path);
       } catch {
         // O tipo declarado pelo navegador não garante o conteúdo: o sharp rejeita arquivos que não são imagem.

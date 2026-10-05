@@ -26,8 +26,9 @@ Site de imobiliária: vitrine pública de imóveis + painel administrativo para 
 - `components/properties/` — cards, grid, galeria, formulário, busca.
 - `prisma/schema.prisma` — modelos `User` e `Property` (imagens são `String[]` de URLs/caminhos).
 - Imóveis têm dois identificadores: `id` (UUID interno, usado no admin e nas APIs de escrita) e `code` (inteiro sequencial a partir de 1001, exibido ao cliente). URLs públicas usam o código: `/imoveis/1001`; links com UUID redirecionam.
-- Uploads passam por `lib/storage.ts` (redimensiona para 1920px e converte para WebP com sharp) e são gravados em `public/uploads/<propertyId|_temp>/`; ao salvar o imóvel, as imagens de `_temp` vão para a pasta dele.
-- Papéis: `ADMIN` (tudo, inclusive `/admin/usuarios`) e `CORRETOR` (imóveis e leads sem responsável ou próprios). Use `requireCurrentUser`/`requireAdmin` em páginas e actions e `getRequestUser` nas rotas `/api/admin/*`.
+- Uploads passam por `lib/storage.ts` (redimensiona para 1920px e converte para WebP com sharp) e são gravados em `public/uploads/<propertyId|_temp>/`; ao salvar o imóvel, as imagens de `_temp` vão para a pasta dele. Fotos de perfil (`kind=avatar` no upload) são recortadas em 512×512 e vão direto para `public/uploads/corretores/`.
+- Na interface, quem acessa o sistema é chamado de **corretor** (nunca "usuário"); no código e no banco o modelo continua `User`. Cada corretor tem foto (`photo`), telefone, e-mail e CRECI (`creci`).
+- Papéis: `ADMIN` (tudo, inclusive `/admin/corretores`, a gestão da equipe) e `CORRETOR` (imóveis e leads sem responsável ou próprios). Use `requireCurrentUser`/`requireAdmin` em páginas e actions e `getRequestUser` nas rotas `/api/admin/*`.
 - Status do imóvel em `lib/property-status.ts`: o site lista só `AVAILABLE`; vendidos/alugados/reservados têm página com aviso; rascunho/inativo só para a equipe.
 
 ## Convenções

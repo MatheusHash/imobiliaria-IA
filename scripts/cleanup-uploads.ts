@@ -1,6 +1,6 @@
 /**
- * Lista (e opcionalmente apaga) imagens em public/uploads que nenhum imóvel usa:
- * fotos removidas no formulário ou enviadas em cadastros que não foram salvos.
+ * Lista (e opcionalmente apaga) imagens em public/uploads que nenhum imóvel ou corretor usa:
+ * fotos removidas/trocadas no formulário ou enviadas em cadastros que não foram salvos.
  *
  *   npm run uploads:cleanup            -> só lista (nada é apagado)
  *   npm run uploads:cleanup -- --apply -> apaga
@@ -30,7 +30,11 @@ async function listFiles(dir: string): Promise<string[]> {
 
 async function main() {
   const properties = await prisma.property.findMany({ select: { images: true } });
-  const referenced = new Set(properties.flatMap((property) => property.images));
+  const users = await prisma.user.findMany({ where: { photo: { not: null } }, select: { photo: true } });
+  const referenced = new Set([
+    ...properties.flatMap((property) => property.images),
+    ...users.map((user) => user.photo as string)
+  ]);
 
   const now = Date.now();
   const orphans: { file: string; publicPath: string; bytes: number }[] = [];

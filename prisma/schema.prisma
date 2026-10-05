@@ -39,10 +39,14 @@ model User {
   email              String   @unique
   passwordHash       String
   role               Role     @default(CORRETOR)
-  /// Usuários desativados não conseguem entrar; imóveis e leads continuam vinculados.
+  /// Corretores desativados não conseguem entrar; imóveis e leads continuam vinculados.
   active             Boolean  @default(true)
-  /// WhatsApp do usuário.
+  /// WhatsApp do corretor.
   phone              String?
+  /// Foto de perfil (caminho em /uploads/corretores/).
+  photo              String?
+  /// Registro no CRECI (ex.: "12345-F/SP").
+  creci              String?
   /// Obriga a troca da senha provisória no próximo acesso.
   mustChangePassword Boolean  @default(false)
   createdAt          DateTime @default(now())

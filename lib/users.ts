@@ -17,6 +17,19 @@ const baseUserSchema = z.object({
     .trim()
     .refine((value) => !value || value.replace(/\D/g, "").length >= 10, "Informe o telefone com DDD")
     .transform((value) => value || null),
+  creci: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .max(30, "CRECI muito longo")
+    .refine((value) => !value || /\d/.test(value), "Informe o número do CRECI")
+    .transform((value) => value || null),
+  // Só aceita fotos enviadas pelo upload de avatar (evita URLs externas arbitrárias).
+  photo: z
+    .string()
+    .trim()
+    .refine((value) => !value || /^\/uploads\/corretores\/[\w-]+\.webp$/.test(value), "Foto inválida")
+    .transform((value) => value || null),
   role: z.nativeEnum(Role, { errorMap: () => ({ message: "Papel inválido" }) })
 });
 

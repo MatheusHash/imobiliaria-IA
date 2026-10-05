@@ -12,6 +12,8 @@ function userFormValues(formData: FormData) {
     name: String(formData.get("name") ?? ""),
     email: String(formData.get("email") ?? ""),
     phone: String(formData.get("phone") ?? ""),
+    creci: String(formData.get("creci") ?? ""),
+    photo: String(formData.get("photo") ?? ""),
     role: String(formData.get("role") ?? "")
   };
 }
@@ -23,7 +25,7 @@ const EMAIL_IN_USE: ActionState = {
 };
 
 export async function createUserAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAdmin("/admin/usuarios/novo");
+  await requireAdmin("/admin/corretores/novo");
 
   const values = userFormValues(formData);
   const parsed = createUserSchema.safeParse({ ...values, password: String(formData.get("password") ?? "") });
@@ -43,12 +45,12 @@ export async function createUserAction(_prevState: ActionState, formData: FormDa
     throw error;
   }
 
-  revalidatePath("/admin/usuarios");
-  redirect("/admin/usuarios?created=1");
+  revalidatePath("/admin/corretores");
+  redirect("/admin/corretores?created=1");
 }
 
 export async function updateUserAction(id: string, _prevState: ActionState, formData: FormData): Promise<ActionState> {
-  const currentUser = await requireAdmin(`/admin/usuarios/${id}/editar`);
+  const currentUser = await requireAdmin(`/admin/corretores/${id}/editar`);
 
   const values = userFormValues(formData);
   const parsed = updateUserSchema.safeParse({
@@ -83,10 +85,10 @@ export async function updateUserAction(id: string, _prevState: ActionState, form
     throw error;
   }
 
-  revalidatePath("/admin/usuarios");
+  revalidatePath("/admin/corretores");
   return {
     success: true,
-    message: password ? "Usuário atualizado. A senha provisória deverá ser trocada no próximo acesso." : "Usuário atualizado."
+    message: password ? "Corretor atualizado. A senha provisória deverá ser trocada no próximo acesso." : "Corretor atualizado."
   };
 }
 
