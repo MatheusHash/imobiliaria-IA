@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { runAlertSweep } from "./alerts";
 import { createSession, destroySession, requireCurrentUser, verifyPassword } from "./auth";
 import { geocodeAddress } from "./geocoding";
 import { createLead, isLeadStatus, leadSchema } from "./leads";
@@ -58,6 +59,16 @@ function refreshPropertyPages() {
   revalidatePath("/admin", "layout");
 }
 
+/** Dispara o módulo "alertas" quando um imóvel fica disponível. Nunca deixa o cadastro falhar. */
+async function notifyAlertsIfPublished(status: string) {
+  if (status !== "AVAILABLE") return;
+  try {
+    await runAlertSweep();
+  } catch (error) {
+    console.error("Falha ao verificar alertas de novos imóveis:", error);
+  }
+}
+
 export async function createPropertyAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   await requireCurrentUser();
 
@@ -78,6 +89,7 @@ export async function createPropertyAction(_prevState: ActionState, formData: Fo
     await prisma.property.update({ where: { id: property.id }, data: { images } });
   }
   refreshPropertyPages();
+  await notifyAlertsIfPublished(property.status);
   redirect(`/admin/imoveis/${property.id}/editar?created=1`);
 }
 
@@ -99,6 +111,7 @@ export async function updatePropertyAction(id: string, _prevState: ActionState, 
   refreshPropertyPages();
   revalidatePath(`/imoveis/${property.code}`);
   revalidatePath(`/admin/imoveis/${id}/editar`);
+  await notifyAlertsIfPublished(property.status);
 
   return { success: true, message: "Imóvel atualizado com sucesso." };
 }

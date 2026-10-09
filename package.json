@@ -13,6 +13,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "uploads:cleanup": "tsx scripts/cleanup-uploads.ts",
     "modules:toggle": "tsx scripts/toggle-module.ts",
+    "alerts:check": "tsx scripts/check-property-alerts.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

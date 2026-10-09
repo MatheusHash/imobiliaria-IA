@@ -9,12 +9,13 @@ import { prisma } from "@/lib/prisma";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireCurrentUser("/admin/imoveis");
-  const [newLeads, indicadoresLigado, corretoresLigado, financiamentoLigado, visitasLigado] = await Promise.all([
+  const [newLeads, indicadoresLigado, corretoresLigado, financiamentoLigado, visitasLigado, alertasLigado] = await Promise.all([
     prisma.lead.count({ where: { status: "NEW", ...leadScope(user) } }),
     isModuleEnabled("indicadores"),
     isModuleEnabled("corretores"),
     isModuleEnabled("financiamento"),
-    isModuleEnabled("visitas")
+    isModuleEnabled("visitas"),
+    isModuleEnabled("alertas")
   ]);
 
   return (
@@ -34,6 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 ...(visitasLigado ? [{ href: "/admin/visitas", label: "Visitas" }] : []),
                 ...(user.role === "ADMIN" && corretoresLigado ? [{ href: "/admin/corretores", label: "Corretores" }] : []),
                 ...(user.role === "ADMIN" && financiamentoLigado ? [{ href: "/admin/financiamento", label: "Financiamento" }] : []),
+                ...(user.role === "ADMIN" && alertasLigado ? [{ href: "/admin/alertas", label: "Alertas" }] : []),
                 { href: "/conta", label: "Minha conta" }
               ]}
             />
