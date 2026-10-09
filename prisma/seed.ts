@@ -1,7 +1,11 @@
 import { PrismaClient, PropertyType, TransactionType } from "@prisma/client";
 import { hashPassword } from "../lib/auth";
+import { ADDON_MODULE_IDS } from "../lib/modules/registry";
 
 const prisma = new PrismaClient();
+
+// Módulos adicionais já em produção nascem ligados; os demais, desligados até serem contratados.
+const ENABLED_ADDON_MODULES = new Set(["corretores", "indicadores"]);
 
 const properties = [
   {
@@ -117,7 +121,15 @@ async function main() {
     await prisma.property.create({ data: property });
   }
 
-  console.log(`Seed concluído: ${properties.length} imóveis e 1 usuário criados.`);
+  for (const moduleId of ADDON_MODULE_IDS) {
+    await prisma.moduleFlag.upsert({
+      where: { moduleId },
+      create: { moduleId, enabled: ENABLED_ADDON_MODULES.has(moduleId) },
+      update: {}
+    });
+  }
+
+  console.log(`Seed concluído: ${properties.length} imóveis, 1 usuário e ${ADDON_MODULE_IDS.length} módulos criados.`);
 }
 
 main()

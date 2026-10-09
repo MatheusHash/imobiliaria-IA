@@ -96,6 +96,16 @@ model Property {
   @@index([status])
 }
 
+/// Módulos adicionais contratados por esta instalação (ver docs/modulos.md). Módulos
+/// essenciais não têm linha aqui — estão sempre ligados. Alterado só pela Chrodar (v1).
+model ModuleFlag {
+  id        String   @id @default(uuid())
+  /// Identificador estável do módulo (ver lib/modules/registry.ts).
+  moduleId  String   @unique
+  enabled   Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
+
 enum LeadStatus {
   NEW
   IN_PROGRESS

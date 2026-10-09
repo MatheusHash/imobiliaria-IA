@@ -11,7 +11,10 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "uploads:cleanup": "tsx scripts/cleanup-uploads.ts"
+    "uploads:cleanup": "tsx scripts/cleanup-uploads.ts",
+    "modules:toggle": "tsx scripts/toggle-module.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -37,7 +40,8 @@
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.15",
     "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^5.0.3"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

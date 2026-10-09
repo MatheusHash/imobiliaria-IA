@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { UserForm } from "@/components/users/user-form";
 import { requireAdmin } from "@/lib/auth";
+import { requireModule } from "@/lib/modules";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +11,7 @@ type PageProps = { params: Promise<{ id: string }> };
 export default async function EditCorretorPage({ params }: PageProps) {
   const { id } = await params;
   const currentUser = await requireAdmin(`/admin/corretores/${id}/editar`);
+  await requireModule("corretores");
 
   const user = await prisma.user.findUnique({
     where: { id },

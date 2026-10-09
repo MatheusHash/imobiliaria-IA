@@ -4,11 +4,16 @@ import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/lib/actions";
 import { requireCurrentUser } from "@/lib/auth";
 import { leadScope } from "@/lib/leads";
+import { isModuleEnabled } from "@/lib/modules";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireCurrentUser();
-  const newLeads = await prisma.lead.count({ where: { status: "NEW", ...leadScope(user) } });
+  const user = await requireCurrentUser("/admin/imoveis");
+  const [newLeads, indicadoresLigado, corretoresLigado] = await Promise.all([
+    prisma.lead.count({ where: { status: "NEW", ...leadScope(user) } }),
+    isModuleEnabled("indicadores"),
+    isModuleEnabled("corretores")
+  ]);
 
   return (
     <>
@@ -21,10 +26,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </div>
             <AdminNav
               items={[
-                { href: "/admin", label: "Painel", exact: true },
+                ...(indicadoresLigado ? [{ href: "/admin", label: "Painel", exact: true }] : []),
                 { href: "/admin/imoveis", label: "Imóveis" },
                 { href: "/admin/leads", label: "Leads", badge: newLeads },
-                ...(user.role === "ADMIN" ? [{ href: "/admin/corretores", label: "Corretores" }] : []),
+                ...(user.role === "ADMIN" && corretoresLigado ? [{ href: "/admin/corretores", label: "Corretores" }] : []),
                 { href: "/conta", label: "Minha conta" }
               ]}
             />
