@@ -13,6 +13,12 @@ const optionalMoney = z.preprocess(
   z.coerce.number().nonnegative("Valor inválido").nullable()
 );
 
+// Coordenada opcional (módulo "mapa"): vazio vira null.
+const optionalCoordinate = z.preprocess(
+  (value) => (value === "" || value === null || value === undefined ? null : value),
+  z.coerce.number().nullable()
+);
+
 export const imageUrlSchema = z.string().refine(
   (val) => {
     // Aceita URLs externas ou paths locais começando com /uploads/
@@ -47,7 +53,9 @@ export const propertySchema = z.object({
   furnished: z.coerce.boolean().default(false),
   petFriendly: z.coerce.boolean().default(false),
   amenities: z.array(z.enum(amenityKeys as [string, ...string[]])).default([]),
-  images: z.array(imageUrlSchema).min(1, "Informe ao menos uma imagem")
+  images: z.array(imageUrlSchema).min(1, "Informe ao menos uma imagem"),
+  latitude: optionalCoordinate.default(null),
+  longitude: optionalCoordinate.default(null)
 });
 
 export const propertyFormSchema = propertySchema.extend({

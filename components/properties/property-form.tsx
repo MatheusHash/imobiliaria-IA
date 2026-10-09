@@ -3,10 +3,10 @@
 import { useActionState, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, ChevronRight, Star, Upload, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Star, Upload, X } from "lucide-react";
 import Image from "next/image";
 import type { PropertyDTO } from "@/lib/properties";
-import { createPropertyAction, updatePropertyAction, type ActionState } from "@/lib/actions";
+import { createPropertyAction, geocodePropertyAddressAction, updatePropertyAction, type ActionState } from "@/lib/actions";
 import { amenityKeys, amenityLabels } from "@/lib/amenities";
 import { propertyStatuses, propertyStatusLabels } from "@/lib/property-status";
 import { propertyFormSchema, type PropertyFormInput } from "@/lib/validations";
@@ -16,11 +16,15 @@ import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/fiel
 
 const initialState: ActionState = {};
 
-export function PropertyForm({ property }: { property?: PropertyDTO }) {
+export function PropertyForm({ property, mapaEnabled = false }: { property?: PropertyDTO; mapaEnabled?: boolean }) {
   const action = property ? updatePropertyAction.bind(null, property.id) : createPropertyAction;
   const [state, formAction, pending] = useActionState(action, initialState);
   const [uploadedPaths, setUploadedPaths] = useState<string[]>(property?.images ?? []);
   const [uploading, setUploading] = useState(false);
+  const [latitude, setLatitude] = useState<number | "">(property?.latitude ?? "");
+  const [longitude, setLongitude] = useState<number | "">(property?.longitude ?? "");
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeError, setGeocodeError] = useState<string | null>(null);
 
   const form = useForm<PropertyFormInput>({
     resolver: zodResolver(propertyFormSchema),
@@ -69,6 +73,26 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
     } finally {
       setUploading(false);
       e.target.value = "";
+    }
+  }
+
+  async function handleGeocode() {
+    const { address, neighborhood, city } = form.getValues();
+    setGeocoding(true);
+    setGeocodeError(null);
+
+    try {
+      const result = await geocodePropertyAddressAction({ address, neighborhood, city });
+      if (!result.ok) {
+        setGeocodeError(result.message);
+        return;
+      }
+      setLatitude(result.latitude);
+      setLongitude(result.longitude);
+    } catch {
+      setGeocodeError("Não foi possível buscar as coordenadas agora.");
+    } finally {
+      setGeocoding(false);
     }
   }
 
@@ -183,6 +207,47 @@ export function PropertyForm({ property }: { property?: PropertyDTO }) {
           <Label htmlFor="address">Endereço</Label>
           <Input id="address" {...form.register("address")} />
         </div>
+
+        {mapaEnabled && (
+          <div className="md:col-span-2 rounded-lg border border-dashed border-border p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label>Localização no mapa</Label>
+              <Button type="button" variant="outline" onClick={handleGeocode} disabled={geocoding} className="gap-2">
+                <MapPin className="h-4 w-4" />
+                {geocoding ? "Buscando..." : "Buscar coordenadas pelo endereço"}
+              </Button>
+            </div>
+            {geocodeError && <p className="mt-2 text-xs text-red-600">{geocodeError}</p>}
+            <p className="mt-2 text-xs text-muted-foreground">
+              Mostra um ponto aproximado na página do imóvel. Ajuste manualmente se a busca errar.
+            </p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="latitude">Latitude</Label>
+                <Input
+                  id="latitude"
+                  name="latitude"
+                  type="number"
+                  step="any"
+                  value={latitude}
+                  onChange={(event) => setLatitude(event.target.value === "" ? "" : Number(event.target.value))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="longitude">Longitude</Label>
+                <Input
+                  id="longitude"
+                  name="longitude"
+                  type="number"
+                  step="any"
+                  value={longitude}
+                  onChange={(event) => setLongitude(event.target.value === "" ? "" : Number(event.target.value))}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         <div>
           <Label htmlFor="condoFee">Condomínio (mensal)</Label>
           <CurrencyInput id="condoFee" name="condoFee" defaultValue={property?.condoFee} />

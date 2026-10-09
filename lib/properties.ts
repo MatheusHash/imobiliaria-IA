@@ -64,6 +64,8 @@ export type PropertyDTO = {
   amenities: string[];
   viewCount: number;
   images: string[];
+  latitude: number | null;
+  longitude: number | null;
   createdAt: string;
   updatedAt: string;
 };
