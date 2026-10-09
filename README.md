@@ -52,3 +52,8 @@ Após executar o seed, utilize estas credenciais na página `/login`:
 
 - Upload de imagens foi modelado como lista de URLs, conforme solicitado.
 - As páginas que consultam o banco são dinâmicas para evitar prerender sem `DATABASE_URL` em ambiente de build.
+
+## Roadmap e módulos
+
+- [docs/ROADMAP.md](docs/ROADMAP.md) — levantamento de funcionalidades do sistema atual.
+- [docs/modulos.md](docs/modulos.md) — plano para transformar o sistema no produto **Chrodar Gestão Imobiliária** (Pacote Essencial + módulos adicionais): lógica de habilitação de módulos por cliente e especificação dos módulos que ainda faltam.

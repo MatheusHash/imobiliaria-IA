@@ -2,6 +2,8 @@
 
 > Levantamento feito em 26/09/2026 a partir do código da `main`.
 > Prioridades: **P1** = necessário para operar de verdade · **P2** = melhora a experiência · **P3** = diferencial.
+>
+> Para o plano de transformar este sistema no produto **Chrodar Gestão Imobiliária** (Pacote Essencial + módulos adicionais vendidos por cliente), com a lógica de habilitação de módulos e a especificação dos módulos que faltam (itens P3 abaixo, entre outros), ver [docs/modulos.md](modulos.md).
 
 ## Sumário
 
