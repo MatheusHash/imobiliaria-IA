@@ -95,6 +95,7 @@ model Property {
   updatedAt       DateTime        @updatedAt
   leads           Lead[]
   visits          Visit[]
+  portalListings  PortalListing[]
 
   @@index([city])
   @@index([type])
@@ -142,6 +143,48 @@ model PropertyAlert {
 
   @@index([email])
   @@index([active, confirmed])
+}
+
+enum PortalName {
+  ZAP
+  VIVAREAL
+  OLX
+}
+
+enum PortalSyncStatus {
+  PENDING
+  SYNCED
+  ERROR
+}
+
+/// Controle de envio de um imóvel para um portal (módulo "portais"). O formato real de
+/// cada portal (feed XML vs. API, campos exigidos) depende de qual portal/plano a
+/// imobiliária-cliente contrata — ainda não definido (ver docs/modulos.md, pergunta 5.4).
+/// Por isso lib/portals.ts só tem um gerador de sincronização "placeholder": o modelo de
+/// dados, a tela admin e o fluxo de status já existem, prontos para receber o formato
+/// real quando a decisão comercial for tomada.
+model PortalListing {
+  id         String           @id @default(uuid())
+  propertyId String
+  property   Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  portal     PortalName
+  enabled    Boolean          @default(true)
+  status     PortalSyncStatus @default(PENDING)
+  /// Id do anúncio no portal, quando a integração real devolver um.
+  externalId String?
+  lastSyncAt DateTime?
+  lastError  String?          @db.Text
+
+  @@unique([propertyId, portal])
+}
+
+/// Credenciais/configuração de cada portal (um registro por portal). `config` é genérico
+/// (Json) porque o formato exato ainda não está definido.
+model PortalCredential {
+  id        String     @id @default(uuid())
+  portal    PortalName @unique
+  config    Json
+  updatedAt DateTime   @updatedAt
 }
 
 enum LeadStatus {

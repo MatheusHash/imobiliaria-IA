@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
+import { PortalListingsForm } from "@/components/properties/portal-listings-form";
 import { PropertyForm } from "@/components/properties/property-form";
 import { isModuleEnabled } from "@/lib/modules";
 import { getPropertyById } from "@/lib/properties";
@@ -10,7 +11,11 @@ type PageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ crea
 export default async function EditPropertyPage({ params, searchParams }: PageProps) {
   const { id } = await params;
   const { created, duplicated } = await searchParams;
-  const [property, mapaEnabled] = await Promise.all([getPropertyById(id), isModuleEnabled("mapa")]);
+  const [property, mapaEnabled, portaisEnabled] = await Promise.all([
+    getPropertyById(id),
+    isModuleEnabled("mapa"),
+    isModuleEnabled("portais")
+  ]);
 
   if (!property) notFound();
 
@@ -28,6 +33,7 @@ export default async function EditPropertyPage({ params, searchParams }: PagePro
       )}
       {created && <div className="mb-6 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">Imóvel cadastrado com sucesso.</div>}
       <PropertyForm property={property} mapaEnabled={mapaEnabled} />
+      {portaisEnabled && <PortalListingsForm propertyId={property.id} />}
     </main>
   );
 }
