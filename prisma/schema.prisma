@@ -85,6 +85,10 @@ model Property {
   /// Visualizações da página pública (visitantes não logados).
   viewCount       Int             @default(0)
   images          String[]
+  /// Localização no mapa (módulo "mapa"). Nulo até ser geocodificado ou informado manualmente.
+  latitude        Float?
+  longitude       Float?
+  geocodedAt      DateTime?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   leads           Lead[]

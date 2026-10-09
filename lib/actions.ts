@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSession, destroySession, requireCurrentUser, verifyPassword } from "./auth";
+import { geocodeAddress } from "./geocoding";
 import { createLead, isLeadStatus, leadSchema } from "./leads";
+import { isModuleEnabled } from "./modules";
 import { prisma } from "./prisma";
 import { checkRateLimit, getClientIp, resetRateLimit } from "./rate-limit";
 import { moveTempImages } from "./storage";
@@ -38,8 +40,16 @@ function formDataToPayload(formData: FormData) {
     furnished: formData.get("furnished") === "on",
     petFriendly: formData.get("petFriendly") === "on",
     amenities: formData.getAll("amenities").map(String),
-    images: parseImagesText(String(formData.get("imagesText") ?? ""))
+    images: parseImagesText(String(formData.get("imagesText") ?? "")),
+    latitude: formData.get("latitude") || undefined,
+    longitude: formData.get("longitude") || undefined
   };
+}
+
+/** Quando a localização vem preenchida, registra quando foi confirmada (ver módulo "mapa"). */
+function withGeocodedAt<T extends { latitude: number | null; longitude: number | null }>(data: T) {
+  const hasCoordinates = data.latitude !== null && data.longitude !== null;
+  return { ...data, geocodedAt: hasCoordinates ? new Date() : null };
 }
 
 function refreshPropertyPages() {
@@ -61,7 +71,7 @@ export async function createPropertyAction(_prevState: ActionState, formData: Fo
     };
   }
 
-  const property = await prisma.property.create({ data: parsed.data });
+  const property = await prisma.property.create({ data: withGeocodedAt(parsed.data) });
   // Imagens enviadas antes de o imóvel existir ficam em _temp; agora vão para a pasta dele.
   const images = await moveTempImages(parsed.data.images, property.id);
   if (images.some((image, index) => image !== parsed.data.images[index])) {
@@ -85,12 +95,40 @@ export async function updatePropertyAction(id: string, _prevState: ActionState, 
   }
 
   const images = await moveTempImages(parsed.data.images, id);
-  const property = await prisma.property.update({ where: { id }, data: { ...parsed.data, images } });
+  const property = await prisma.property.update({ where: { id }, data: { ...withGeocodedAt(parsed.data), images } });
   refreshPropertyPages();
   revalidatePath(`/imoveis/${property.code}`);
   revalidatePath(`/admin/imoveis/${id}/editar`);
 
   return { success: true, message: "Imóvel atualizado com sucesso." };
+}
+
+export type GeocodeActionResult = { ok: true; latitude: number; longitude: number } | { ok: false; message: string };
+
+/**
+ * Chamada diretamente pelo formulário (não via <form action>), sob clique explícito do
+ * admin — nunca em lote, para respeitar a política de uso da Nominatim (ver lib/geocoding.ts).
+ */
+export async function geocodePropertyAddressAction(input: {
+  address: string;
+  neighborhood: string;
+  city: string;
+}): Promise<GeocodeActionResult> {
+  await requireCurrentUser();
+
+  // notFound() é para páginas; aqui a chamada não é uma navegação, por isso checamos direto.
+  if (!(await isModuleEnabled("mapa"))) {
+    return { ok: false, message: "Módulo de mapa desligado." };
+  }
+
+  const query = [input.address, input.neighborhood, input.city, "Brasil"].filter(Boolean).join(", ");
+  const result = await geocodeAddress(query);
+
+  if (!result) {
+    return { ok: false, message: "Não encontramos esse endereço. Ajuste manualmente o pino no mapa ou as coordenadas." };
+  }
+
+  return { ok: true, ...result };
 }
 
 export async function duplicatePropertyAction(id: string) {

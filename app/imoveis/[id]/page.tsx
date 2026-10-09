@@ -7,6 +7,7 @@ import { InterestForm } from "@/components/leads/interest-form";
 import { FinancingSimulator } from "@/components/properties/financing-simulator";
 import { PropertyGallery } from "@/components/properties/property-gallery";
 import { PropertyGrid } from "@/components/properties/property-grid";
+import { PropertyMap } from "@/components/properties/property-map";
 import { amenityLabels, isAmenity } from "@/lib/amenities";
 import { getCurrentUser } from "@/lib/auth";
 import { getFinancingSettings } from "@/lib/financing-settings";
@@ -73,6 +74,7 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
   const similar = await getSimilarProperties(property);
   const showFinancingSimulator = acceptsLeads && property.transactionType === "SALE" && (await isModuleEnabled("financiamento"));
   const financingSettings = showFinancingSimulator ? await getFinancingSettings() : null;
+  const showMap = property.latitude !== null && property.longitude !== null && (await isModuleEnabled("mapa"));
   const amenities = property.amenities.filter(isAmenity);
   const monthlyCosts = [
     property.condoFee !== null && { label: "Condomínio", value: `${formatCurrency(property.condoFee)}/mês` },
@@ -144,6 +146,11 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
             <div className="mt-3 rounded-xl border bg-background p-6 text-muted-foreground">
               {property.address}, {property.neighborhood}, {property.city}
             </div>
+            {showMap && property.latitude !== null && property.longitude !== null && (
+              <div className="mt-3">
+                <PropertyMap latitude={property.latitude} longitude={property.longitude} label={`${property.neighborhood}, ${property.city}`} />
+              </div>
+            )}
           </div>
 
           {showFinancingSimulator && financingSettings && (

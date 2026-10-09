@@ -1,6 +1,11 @@
 import { PropertyForm } from "@/components/properties/property-form";
+import { isModuleEnabled } from "@/lib/modules";
 
-export default function NewPropertyPage() {
+export const dynamic = "force-dynamic";
+
+export default async function NewPropertyPage() {
+  const mapaEnabled = await isModuleEnabled("mapa");
+
   return (
     <main className="container-page py-10">
       <div className="mb-8">
@@ -8,7 +13,7 @@ export default function NewPropertyPage() {
         <h1 className="text-3xl font-bold text-foreground">Novo imóvel</h1>
         <p className="mt-2 text-muted-foreground">Preencha todos os dados para cadastrar um imóvel.</p>
       </div>
-      <PropertyForm />
+      <PropertyForm mapaEnabled={mapaEnabled} />
     </main>
   );
 }
