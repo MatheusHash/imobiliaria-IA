@@ -106,6 +106,18 @@ model ModuleFlag {
   updatedAt DateTime @updatedAt
 }
 
+/// Configuração do simulador de financiamento (módulo "financiamento"). Registro único por
+/// instalação — não há multi-tenant neste sistema (ver docs/modulos.md, seção 2.1).
+model FinancingSettings {
+  id                String   @id @default("default")
+  /// Taxa de juros sugerida, em % ao ano.
+  defaultRateYearly Decimal  @db.Decimal(5, 2)
+  /// Entrada mínima sugerida, em %.
+  minDownPaymentPct Decimal  @db.Decimal(5, 2)
+  maxMonths         Int      @default(420)
+  updatedAt         DateTime @updatedAt
+}
+
 enum LeadStatus {
   NEW
   IN_PROGRESS
