@@ -8,6 +8,7 @@
 
 - [1. O que já existe hoje (auditoria)](#1-o-que-já-existe-hoje-auditoria)
 - [2. Lógica de habilitação de módulos](#2-lógica-de-habilitação-de-módulos)
+- [2.9 Infraestrutura de hospedagem (decidido)](#29-infraestrutura-de-hospedagem-decidido)
 - [3. Especificação dos módulos que faltam](#3-especificação-dos-módulos-que-faltam)
 - [4. Ordem de implementação proposta](#4-ordem-de-implementação-proposta)
 - [5. Perguntas que precisam de uma decisão do dono do produto](#5-perguntas-que-precisam-de-uma-decisão-do-dono-do-produto)
@@ -203,6 +204,74 @@ Ordem pensada para que cada passo, isoladamente, não mude nenhum comportamento 
 5. **Teste de aceite do mecanismo**, em ambiente local/staging: desligar `indicadores` ou `corretores` manualmente na tabela e confirmar que o menu, a página direta por URL, a action e o sitemap (se aplicável) reagem corretamente, e que religar devolve tudo sem perda. Só depois disso o mecanismo é considerado confiável para sustentar módulos novos.
 6. **A partir daqui, construir os módulos 7 a 11 já nascendo atrás de `requireModule`/`isModuleEnabled`** — nunca como um "acoplar depois".
 7. **Processo operacional da Chrodar** para ligar/desligar módulo por cliente (script `scripts/toggle-module.ts` é suficiente para a v1; uma tela interna de administração entre clientes pode vir depois, quando houver volume que justifique).
+
+---
+
+## 2.9 Infraestrutura de hospedagem (decidido)
+
+> Decisão tomada: **não é um SaaS.** Uma VPS própria, com Docker, um container de aplicação por imobiliária-cliente e um único Postgres compartilhado com **um banco por cliente**. Isso é a implementação concreta da recomendação da seção 2.1 ("uma instalação por imobiliária") — resolve também a pergunta 5.1 da seção 5.
+
+### Desenho
+
+```
+                         VPS (um host)
+┌───────────────────────────────────────────────────────────┐
+│  Traefik (proxy reverso + TLS automático via Let's Encrypt)│
+│      cliente-a.com.br ──┐   cliente-b.com.br ──┐           │
+└──────────────────────────┼──────────────────────┼──────────┘
+                            ▼                      ▼
+                    ┌───────────────┐      ┌───────────────┐
+                    │ container app │      │ container app │
+                    │ (mesma imagem │      │ (mesma imagem │
+                    │  Next.js,     │      │  Next.js,     │
+                    │  env próprio) │      │  env próprio) │
+                    └──────┬────────┘      └──────┬────────┘
+                           │                       │
+                           ▼                       ▼
+                  ┌──────────────────── Postgres (1 container) ─┐
+                  │  database "cliente_a"   database "cliente_b"│
+                  └───────────────────────────────────────────── ┘
+                  volume uploads_cliente_a    volume uploads_cliente_b
+```
+
+### Decisões dentro dessa arquitetura
+
+**1. Banco: um container Postgres compartilhado, um `CREATE DATABASE` por cliente — não um container Postgres por cliente.**
+O Postgres já garante isolamento entre bancos (não existe query cross-database sem `dblink` explícito) — o mesmo nível de isolamento de dados de "um Postgres por cliente", custando uma fração da RAM, porque cada instância Postgres consome memória de base mesmo ociosa. Cada cliente continua com seu próprio `DATABASE_URL` (`postgresql://.../cliente_a`); só o host é compartilhado, não o schema nem os dados.
+
+**2. Uma imagem Docker só, reaproveitada por todos os clientes.**
+Como a tabela `ModuleFlag` (seção 2.2) vive **dentro do banco de cada cliente**, não é preciso build diferente por cliente. A mesma imagem Next.js roda para todos; o que muda entre containers é só variável de ambiente (`DATABASE_URL`, `AUTH_SECRET`, `WHATSAPP_NUMBER`, `NEXT_PUBLIC_SITE_URL`) e as linhas da `ModuleFlag` daquele banco. Builda-se a imagem uma vez; não N vezes.
+
+**3. Proxy reverso e TLS por domínio: Traefik.**
+Lê labels do Docker Compose e provisiona certificado Let's Encrypt automaticamente a cada novo container — adicionar um cliente não exige editar configuração de proxy na mão.
+Alternativa a avaliar: **Coolify** ou **Dokploy** (self-hosted, open source) — já empacotam "N apps + N bancos por VPS, domínio próprio, TLS automático" como produto pronto, sem virar SaaS (continua sendo a própria VPS, os próprios containers). Pode poupar a construção manual dessa orquestração.
+
+**4. Armazenamento de imagens: disco local via volume Docker, um volume nomeado por cliente.**
+Nesse modelo (VPS própria, não serverless), `lib/storage.ts` (disco local + `sharp`) **continua válido** — não é preciso migrar para S3 como o `docs/ROADMAP.md` cogitava para hospedagem serverless (Vercel). Cada cliente precisa de um volume Docker nomeado (`uploads_cliente_a`) montado em `/app/public/uploads`, para as imagens sobreviverem a um `docker compose up` que recria o container.
+
+**5. Provisionamento de cliente novo precisa ser um script, não um procedimento manual, desde o primeiro cliente.**
+Ex.: `scripts/provisionar-cliente.sh <slug> <dominio>` que cria o banco, roda `prisma migrate deploy` + seed do admin, gera o bloco do `docker-compose`, sobe o container e registra o domínio no Traefik. Fazer isso na mão funciona para 1-2 clientes e trava a operação a partir do quinto.
+
+**6. Deploy de uma nova versão do sistema = duas operações em loop, não manuais.**
+Build da imagem uma vez → (a) `prisma migrate deploy` contra o `DATABASE_URL` de cada cliente, (b) subir cada container com a nova tag de imagem. Manter um registro simples (arquivo `clients.json`, ou equivalente) com slug, domínio, nome do banco e módulos contratados, percorrido por script — evita que isso vire trabalho manual repetido a cada release.
+
+**7. Backup e recuperação de desastre.**
+`pg_dump` agendado (por banco, ou do cluster inteiro, já que é um Postgres só) + backup dos volumes de upload, enviados para fora da VPS (ex.: Backblaze B2 ou outro S3-compatível, baixo custo). Testar a restauração pelo menos uma vez — backup nunca restaurado é uma suposição, não uma garantia.
+
+**8. Monitoramento básico.**
+Algo leve — Uptime Kuma (self-hosted) ou UptimeRobot (plano gratuito) — verificando cada domínio de cliente, para detectar queda antes do cliente avisar.
+
+### Riscos aceitos conscientemente
+
+- **A VPS é um ponto único de falha para todos os clientes ao mesmo tempo.** Se ela cair, todos os sites caem juntos. Para o perfil do produto (pequenas imobiliárias), essa é uma troca aceitável — mas a promessa de recuperação deve ser explícita ("restauramos em X horas a partir do backup"), não implícita.
+- **Vizinho ruidoso:** um cliente com pico de tráfego, ou um container com uso anormal de memória, pode afetar os outros no mesmo host se não houver limite de recursos (`mem_limit`/`cpus`) por container desde o início.
+- **Isolamento de container não é isolamento de VM.** Suficiente para o risco real deste produto (dados de uma pequena imobiliária vs. outra), mas não deve ser vendido como "cada cliente numa VM própria", porque não é o caso.
+
+### O que revisitar quando crescer
+
+- Quando o número de clientes estressar uma única VPS (CPU/RAM/disco), a saída é **mais VPS** (distribuir clientes entre hosts, mantendo o mesmo modelo), não migrar para multi-tenant — por isso vale registrar "qual VPS" como campo do cadastro de clientes desde já, mesmo havendo só uma hoje.
+- Se o volume de imagens crescer muito, migrar os volumes de upload para object storage (S3/R2) é uma troca isolada, já prevista em `lib/storage.ts`.
+- Se algum cliente precisar de SLA mais forte que os outros, considerar isolar esse cliente numa VPS própria só para ele, em vez de reforçar a VPS compartilhada.
 
 ---
 
@@ -455,7 +524,7 @@ model Property {
 
 ## 5. Perguntas que precisam de uma decisão do dono do produto
 
-1. **Escala de clientes:** quantas imobiliárias-cliente são esperadas no primeiro ano? Isso valida (ou não) a recomendação de "uma instalação por cliente" da seção 2.1 — se o número for muito grande, vale planejar uma migração futura para multi-tenant como projeto separado.
+1. ~~**Escala de clientes**~~ — **decidido (seção 2.9):** VPS própria com Docker, um container de app por cliente, Postgres compartilhado com um banco por cliente. Ainda em aberto dentro dessa decisão: quantas imobiliárias-cliente são esperadas no primeiro ano, para dimensionar a VPS (RAM/CPU/disco) e saber quando entra uma segunda VPS (ver "o que revisitar quando crescer" na seção 2.9).
 2. **Quem pode alterar módulos:** confirma que, na v1, só a Chrodar liga/desliga módulos (seção 2.2), com o administrador da imobiliária apenas visualizando o que está contratado? Ou já é necessário algum autoatendimento?
 3. **Confirmação de visita (módulo 7):** a confirmação deve ser só na tela (v1, sem custo) ou também por e-mail/WhatsApp automático? Automação por WhatsApp exige WhatsApp Business API, com custo por conversa e aprovação prévia da Meta.
 4. **Portais (módulo 8):** quais portais (ZAP, VivaReal, OLX) o cliente-alvo já assina, e com qual tipo de plano — feed XML agendado ou API de integração direta? Isso decide o formato técnico da integração e se há custo adicional por portal.
