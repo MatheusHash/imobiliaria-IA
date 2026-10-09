@@ -4,11 +4,14 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { Bath, BedDouble, Car, Check, Info, MapPin, MessageCircle, Ruler } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { InterestForm } from "@/components/leads/interest-form";
+import { FinancingSimulator } from "@/components/properties/financing-simulator";
 import { PropertyGallery } from "@/components/properties/property-gallery";
 import { PropertyGrid } from "@/components/properties/property-grid";
 import { amenityLabels, isAmenity } from "@/lib/amenities";
 import { getCurrentUser } from "@/lib/auth";
+import { getFinancingSettings } from "@/lib/financing-settings";
 import { whatsappLink } from "@/lib/leads";
+import { isModuleEnabled } from "@/lib/modules";
 import { getPropertyByCodeOrId, getSimilarProperties, incrementPropertyViews, parsePropertyCode } from "@/lib/properties";
 import { ACCEPTS_LEADS_STATUSES, PUBLIC_PAGE_STATUSES, propertyStatusLabels } from "@/lib/property-status";
 import { siteConfig } from "@/lib/site";
@@ -68,6 +71,8 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
   const acceptsLeads = ACCEPTS_LEADS_STATUSES.includes(property.status);
   const notice = property.status === "AVAILABLE" ? null : statusNotices[property.status];
   const similar = await getSimilarProperties(property);
+  const showFinancingSimulator = acceptsLeads && property.transactionType === "SALE" && (await isModuleEnabled("financiamento"));
+  const financingSettings = showFinancingSimulator ? await getFinancingSettings() : null;
   const amenities = property.amenities.filter(isAmenity);
   const monthlyCosts = [
     property.condoFee !== null && { label: "Condomínio", value: `${formatCurrency(property.condoFee)}/mês` },
@@ -140,6 +145,15 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
               {property.address}, {property.neighborhood}, {property.city}
             </div>
           </div>
+
+          {showFinancingSimulator && financingSettings && (
+            <FinancingSimulator
+              price={property.price}
+              defaultRateYearly={financingSettings.defaultRateYearly}
+              minDownPaymentPct={financingSettings.minDownPaymentPct}
+              maxMonths={financingSettings.maxMonths}
+            />
+          )}
         </div>
 
         <aside className="h-fit rounded-2xl border bg-background p-6 shadow-sm">
