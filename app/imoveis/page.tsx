@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PropertyAlertForm } from "@/components/properties/property-alert-form";
 import { PropertyGrid } from "@/components/properties/property-grid";
 import { SearchForm } from "@/components/properties/search-form";
+import { isModuleEnabled } from "@/lib/modules";
 import { getPropertiesPage, parseSort, sortOptions, type PropertyFilters, type SortKey } from "@/lib/properties";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +43,7 @@ export default async function PropertiesPage({ searchParams }: PageProps) {
   const filters = await searchParams;
   const { properties, total, page, pageCount } = await getPropertiesPage(filters);
   const sort = parseSort(filters.sort);
+  const alertsEnabled = await isModuleEnabled("alertas");
 
   // Quem busca pelo código quer ver aquele imóvel: vai direto para a página dele.
   if (filters.code && total === 1) redirect(`/imoveis/${properties[0].code}`);
@@ -79,6 +82,23 @@ export default async function PropertiesPage({ searchParams }: PageProps) {
           ))}
         </nav>
       </div>
+
+      {alertsEnabled && (
+        <div className="mb-6">
+          <PropertyAlertForm
+            filters={{
+              type: filters.type,
+              transactionType: filters.transactionType,
+              city: filters.city,
+              neighborhood: filters.neighborhood,
+              minPrice: filters.minPrice,
+              maxPrice: filters.maxPrice,
+              bedrooms: filters.bedrooms,
+              parking: filters.parking
+            }}
+          />
+        </div>
+      )}
 
       <PropertyGrid properties={properties} />
 

@@ -125,6 +125,25 @@ model FinancingSettings {
   updatedAt         DateTime @updatedAt
 }
 
+/// Alerta de novos imóveis (módulo "alertas"): o visitante salva um filtro de busca e é
+/// avisado por e-mail quando surgir um imóvel que bate com ele.
+model PropertyAlert {
+  id        String   @id @default(uuid())
+  email     String
+  /// Mesmo formato de PropertyFilters (lib/properties.ts), sem paginação/ordenação.
+  filters   Json
+  /// Double opt-in: só começa a receber avisos depois de confirmar o e-mail.
+  confirmed Boolean  @default(false)
+  confirmToken String @unique
+  cancelToken  String @unique
+  active    Boolean  @default(true)
+  lastNotifiedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([active, confirmed])
+}
+
 enum LeadStatus {
   NEW
   IN_PROGRESS
