@@ -14,6 +14,7 @@
     "uploads:cleanup": "tsx scripts/cleanup-uploads.ts",
     "modules:toggle": "tsx scripts/toggle-module.ts",
     "alerts:check": "tsx scripts/check-property-alerts.ts",
+    "portals:sync": "tsx scripts/sync-portals.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
