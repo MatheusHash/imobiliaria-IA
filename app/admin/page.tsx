@@ -3,6 +3,7 @@ import { Eye, Home, Inbox, KeyRound, PencilLine } from "lucide-react";
 import { LinkButton } from "@/components/ui/button";
 import { requireCurrentUser } from "@/lib/auth";
 import { leadScope, leadStatusLabels } from "@/lib/leads";
+import { requireModule } from "@/lib/modules";
 import { prisma } from "@/lib/prisma";
 import { propertyStatusLabels } from "@/lib/property-status";
 
@@ -11,7 +12,10 @@ export const dynamic = "force-dynamic";
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
 
 export default async function AdminDashboardPage() {
-  const user = await requireCurrentUser("/admin");
+  // "/admin/imoveis" (essencial) é o destino seguro se o usuário não estiver logado;
+  // módulo "indicadores" (adicional) é checado abaixo, já autenticado.
+  const user = await requireCurrentUser("/admin/imoveis");
+  await requireModule("indicadores");
   const scope = leadScope(user);
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 

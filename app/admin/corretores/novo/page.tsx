@@ -1,10 +1,12 @@
 import { UserForm } from "@/components/users/user-form";
 import { requireAdmin } from "@/lib/auth";
+import { requireModule } from "@/lib/modules";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewCorretorPage() {
   await requireAdmin("/admin/corretores/novo");
+  await requireModule("corretores");
 
   return (
     <main className="container-page py-10">

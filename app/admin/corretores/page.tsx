@@ -4,6 +4,7 @@ import { Pencil, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/auth";
+import { requireModule } from "@/lib/modules";
 import { prisma } from "@/lib/prisma";
 import { roleLabels } from "@/lib/users";
 
@@ -13,6 +14,7 @@ type PageProps = { searchParams: Promise<{ created?: string }> };
 
 export default async function AdminCorretoresPage({ searchParams }: PageProps) {
   const currentUser = await requireAdmin("/admin/corretores");
+  await requireModule("corretores");
   const { created } = await searchParams;
 
   const users = await prisma.user.findMany({

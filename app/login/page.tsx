@@ -8,8 +8,10 @@ export const dynamic = "force-dynamic";
 type PageProps = { searchParams: Promise<{ next?: string }> };
 
 function getSafeNextPath(next?: string) {
+  // "/admin/imoveis" (Gestão de imóveis) é essencial e está sempre ligado; "/admin" (Painel de
+  // indicadores) é um módulo adicional que pode estar desligado, por isso não é o destino padrão.
   if (!next || !next.startsWith("/") || next.startsWith("//")) {
-    return "/admin";
+    return "/admin/imoveis";
   }
 
   return next;

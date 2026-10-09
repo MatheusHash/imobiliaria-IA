@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ActionState } from "./actions";
 import { getCurrentUser, hashPassword, requireAdmin, verifyPassword } from "./auth";
+import { requireModule } from "./modules";
 import { prisma } from "./prisma";
 import { changePasswordSchema, checkAdminRemains, createUserSchema, isUniqueEmailError, updateUserSchema } from "./users";
 
@@ -26,6 +27,7 @@ const EMAIL_IN_USE: ActionState = {
 
 export async function createUserAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin("/admin/corretores/novo");
+  await requireModule("corretores");
 
   const values = userFormValues(formData);
   const parsed = createUserSchema.safeParse({ ...values, password: String(formData.get("password") ?? "") });
@@ -51,6 +53,7 @@ export async function createUserAction(_prevState: ActionState, formData: FormDa
 
 export async function updateUserAction(id: string, _prevState: ActionState, formData: FormData): Promise<ActionState> {
   const currentUser = await requireAdmin(`/admin/corretores/${id}/editar`);
+  await requireModule("corretores");
 
   const values = userFormValues(formData);
   const parsed = updateUserSchema.safeParse({
