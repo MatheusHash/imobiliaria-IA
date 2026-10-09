@@ -8,12 +8,14 @@ import { FinancingSimulator } from "@/components/properties/financing-simulator"
 import { PropertyGallery } from "@/components/properties/property-gallery";
 import { PropertyGrid } from "@/components/properties/property-grid";
 import { PropertyMap } from "@/components/properties/property-map";
+import { VisitScheduler } from "@/components/properties/visit-scheduler";
 import { amenityLabels, isAmenity } from "@/lib/amenities";
 import { getCurrentUser } from "@/lib/auth";
 import { getFinancingSettings } from "@/lib/financing-settings";
 import { whatsappLink } from "@/lib/leads";
 import { isModuleEnabled } from "@/lib/modules";
 import { getPropertyByCodeOrId, getSimilarProperties, incrementPropertyViews, parsePropertyCode } from "@/lib/properties";
+import { getAvailableSlots } from "@/lib/visits";
 import { ACCEPTS_LEADS_STATUSES, PUBLIC_PAGE_STATUSES, propertyStatusLabels } from "@/lib/property-status";
 import { siteConfig } from "@/lib/site";
 import { formatCurrency, propertyTypeLabel, transactionTypeLabel } from "@/lib/utils";
@@ -75,6 +77,8 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
   const showFinancingSimulator = acceptsLeads && property.transactionType === "SALE" && (await isModuleEnabled("financiamento"));
   const financingSettings = showFinancingSimulator ? await getFinancingSettings() : null;
   const showMap = property.latitude !== null && property.longitude !== null && (await isModuleEnabled("mapa"));
+  const showVisitScheduler = acceptsLeads && (await isModuleEnabled("visitas"));
+  const visitDays = showVisitScheduler ? await getAvailableSlots() : [];
   const amenities = property.amenities.filter(isAmenity);
   const monthlyCosts = [
     property.condoFee !== null && { label: "Condomínio", value: `${formatCurrency(property.condoFee)}/mês` },
@@ -161,6 +165,8 @@ export default async function PropertyDetailsPage({ params }: PageProps) {
               maxMonths={financingSettings.maxMonths}
             />
           )}
+
+          {showVisitScheduler && <VisitScheduler propertyId={property.id} days={visitDays} />}
         </div>
 
         <aside className="h-fit rounded-2xl border bg-background p-6 shadow-sm">

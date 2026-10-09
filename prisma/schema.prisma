@@ -52,6 +52,8 @@ model User {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   assignedLeads      Lead[]
+  assignedVisits     Visit[]
+  visitSlotRules     VisitSlotRule[]
 
   @@index([email])
 }
@@ -92,6 +94,7 @@ model Property {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   leads           Lead[]
+  visits          Visit[]
 
   @@index([city])
   @@index([type])
@@ -129,6 +132,56 @@ enum LeadStatus {
   LOST
 }
 
+enum VisitStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+  DONE
+  NO_SHOW
+}
+
+/// Janela de disponibilidade recorrente para visitas (módulo "visitas"). `userId` nulo é a
+/// regra geral da imobiliária — única forma usada na v1 (sem agenda por corretor ainda).
+model VisitSlotRule {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// 0 (domingo) a 6 (sábado).
+  weekday     Int
+  /// "HH:mm", ex.: "09:00".
+  startTime   String
+  endTime     String
+  slotMinutes Int      @default(30)
+  active      Boolean  @default(true)
+
+  @@index([userId])
+}
+
+/// Visita agendada pelo cliente direto no site (módulo "visitas").
+model Visit {
+  id           String      @id @default(uuid())
+  /// Opcional para a visita não se perder se o imóvel for excluído (mesmo critério do Lead).
+  propertyId   String?
+  property     Property?   @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  /// Reservado para uma futura integração com Lead; não preenchido automaticamente ainda.
+  leadId       String?
+  lead         Lead?       @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  scheduledFor DateTime
+  status       VisitStatus @default(PENDING)
+  visitorName  String
+  visitorPhone String
+  visitorEmail String
+  assignedToId String?
+  assignedTo   User?       @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  notes        String?     @db.Text
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([propertyId])
+  @@index([scheduledFor])
+  @@index([assignedToId])
+}
+
 /// Contato de um cliente interessado em um imóvel.
 model Lead {
   id           String     @id @default(uuid())
@@ -144,6 +197,7 @@ model Lead {
   assignedTo   User?      @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  visits       Visit[]
 
   @@index([status])
   @@index([propertyId])
