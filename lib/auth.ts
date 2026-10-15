@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "./prisma";
 
-const SESSION_COOKIE = "imobiliaria_session";
+export const SESSION_COOKIE = "imobiliaria_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 const PASSWORD_ITERATIONS = 120_000;
 const PASSWORD_KEY_LENGTH = 32;

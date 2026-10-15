@@ -10,3 +10,9 @@ public/uploads/*
 !public/uploads/seed-*/
 .kdev4/
 *.kdev4
+
+# Playwright (E2E)
+/playwright-report/
+/test-results/
+/e2e/.auth/
+/blob-report/

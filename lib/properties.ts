@@ -130,10 +130,12 @@ export function buildPropertyWhere(filters: PropertyFilters = {}, audience: Audi
 
   const min = filters.minPrice ? Number(filters.minPrice) : undefined;
   const max = filters.maxPrice ? Number(filters.maxPrice) : undefined;
-  if (!Number.isNaN(min) || !Number.isNaN(max)) {
+  const hasMin = min !== undefined && !Number.isNaN(min);
+  const hasMax = max !== undefined && !Number.isNaN(max);
+  if (hasMin || hasMax) {
     where.price = {
-      ...(min !== undefined && !Number.isNaN(min) ? { gte: min } : {}),
-      ...(max !== undefined && !Number.isNaN(max) ? { lte: max } : {})
+      ...(hasMin ? { gte: min } : {}),
+      ...(hasMax ? { lte: max } : {})
     };
   }
 

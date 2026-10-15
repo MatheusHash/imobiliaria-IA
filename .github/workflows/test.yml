@@ -1,0 +1,67 @@
+name: Testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit:
+    name: Testes unitários (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run test
+
+  e2e:
+    name: Testes E2E (Playwright)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          # Nome com "test": prisma/seed-e2e.ts recusa rodar contra um banco que não pareça
+          # ser de testes (ver a trava em assertTestDatabase lá no arquivo).
+          POSTGRES_DB: imobiliaria_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d imobiliaria_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/imobiliaria_test?schema=public
+      AUTH_SECRET: ci-test-secret-not-for-production
+      NEXT_PUBLIC_SITE_URL: http://localhost:3100
+      WHATSAPP_NUMBER: ""
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Não usa `npm run test:e2e` (que chama scripts/e2e-db-setup.ts): aquele script sobe o
+      # banco via `docker compose exec`, pensado para o Postgres local do dev. Aqui o banco já
+      # vem de `services.postgres` acima, então só falta migrar e popular.
+      - run: npx prisma migrate deploy
+      - run: npx tsx prisma/seed-e2e.ts
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - name: Publicar relatório do Playwright
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

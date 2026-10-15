@@ -17,6 +17,8 @@ Site de imobiliária: vitrine pública de imóveis + painel administrativo para 
 - `npm run db:seed` — popula o banco (inclui o usuário admin, ver README)
 - `npm run prisma:studio` — inspeciona o banco
 - `npm run uploads:cleanup` — lista imagens sem uso em `public/uploads` (`-- --apply` para apagar)
+- `npm run test` — testes unitários (Vitest, `lib/*.test.ts`)
+- `npm run test:e2e` — testes E2E (Playwright, `e2e/*.spec.ts`); sobe um banco `imobiliaria_test` separado automaticamente (ver `e2e/COVERAGE.md`)
 
 ## Estrutura
 - `app/` — rotas. Públicas: `/`, `/imoveis`, `/imoveis/[id]`, `/login`. Admin: `/admin/imoveis/*`.
@@ -36,3 +38,5 @@ Site de imobiliária: vitrine pública de imóveis + painel administrativo para 
 - Estilização apenas com classes Tailwind; reutilizar `components/ui/` antes de criar novos.
 - Validação de entrada com zod, compartilhada entre cliente e API.
 - Variáveis de ambiente: `DATABASE_URL`, `AUTH_SECRET` (ver `.env.example`).
+- Ao implementar uma funcionalidade nova ou alterar o comportamento de uma existente, atualize `e2e/COVERAGE.md` (status da cobertura) e crie/ajuste o teste correspondente em `e2e/`. Se o teste não for escrito na hora, deixe a lacuna marcada lá em vez de deixar a tabela desatualizada — é o checklist de "o que já foi testado e o que falta" do projeto.
+- Todo teste (E2E ou unitário) anuncia o que está testando via `console.info` ao rodar. Isso é automático — um reporter do Playwright (`e2e/reporters/console-info-reporter.ts`) e um setup do Vitest (`vitest.setup.ts`) já cuidam disso para qualquer `test`/`it` novo, sem precisar de código extra no corpo do teste. Não adicione `console.info` manualmente dentro de um teste por esse motivo; se o título do teste já descreve bem o que ele faz (deveria), não há nada a fazer.
