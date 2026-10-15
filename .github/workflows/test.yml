@@ -10,6 +10,28 @@ jobs:
   unit:
     name: Testes unitários (Vitest)
     runs-on: ubuntu-latest
+    services:
+      # A maioria dos testes em lib/*.test.ts é pura (sem banco), mas alguns — nas suítes
+      # marcadas "(integração, banco local)" em lib/alerts.test.ts, lib/modules.test.ts,
+      # lib/visits.test.ts e lib/portals.test.ts — leem/escrevem no Postgres de verdade
+      # (cada um cria e limpa os próprios dados; não precisam de prisma/seed-e2e.ts).
+      # Localmente isso "funciona de grátis" porque o @prisma/client carrega o .env da raiz
+      # sozinho; no CI não há .env (está no .gitignore), por isso o banco precisa vir daqui.
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: imobiliaria_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d imobiliaria_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/imobiliaria_test?schema=public
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,6 +39,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: npx prisma migrate deploy
       - run: npm run test
 
   e2e:

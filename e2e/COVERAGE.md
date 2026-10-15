@@ -146,7 +146,16 @@ só volte à tabela de E2E acima se a mudança também afetar o comportamento vi
 
 ## CI
 
-`.github/workflows/test.yml` roda `npm run test` (Vitest) e a suíte Playwright completa
-(com um Postgres de serviço, build de produção, `prisma migrate deploy` +
-`prisma/seed-e2e.ts`) em todo push/PR para `main`. Publica o relatório HTML do Playwright
-como artefato quando algo falha.
+`.github/workflows/test.yml` roda dois jobs em todo push/PR para `main`:
+
+- **`unit`** (Vitest) — tem o seu próprio Postgres de serviço + `prisma migrate deploy`
+  (só schema, sem seed). É necessário porque algumas suítes em `lib/*.test.ts` — as
+  marcadas "(integração, banco local)" em `alerts.test.ts`, `modules.test.ts`,
+  `visits.test.ts` e `portals.test.ts` — leem/escrevem num Postgres real (cada uma cria e
+  limpa os próprios dados). Localmente isso roda "de grátis" porque o `@prisma/client`
+  carrega o `.env` da raiz sozinho; no CI não há `.env` (está no `.gitignore`), então sem
+  esse serviço esses 4 arquivos falham com erro de conexão — foi exatamente isso que
+  aconteceu antes dessa correção.
+- **`e2e`** (Playwright) — Postgres de serviço próprio, build de produção, `prisma migrate
+  deploy` + `prisma/seed-e2e.ts`. Publica o relatório HTML do Playwright como artefato
+  quando algo falha.
